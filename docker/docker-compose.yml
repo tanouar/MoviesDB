@@ -1,0 +1,25 @@
+# version: '3.8'
+
+services:
+  mysql:
+    build:
+    #context - where dockerfile is relative to the docker-compose.yml file
+      context: .
+      dockerfile: Dockerfile.mysql
+    container_name: moviesdb_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: moviesdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  mysql_data:
