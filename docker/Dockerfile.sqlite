@@ -1,0 +1,33 @@
+# ---------- Base image ----------
+FROM python:3.11-slim
+
+# ---------- Environment ----------
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SQLITE_TMPDIR=/tmp
+
+# ---------- System deps ----------
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        sqlite3 \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- Working directory ----------
+WORKDIR /app
+
+# ---------- Python deps (cached layer) ----------
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ---------- Application code ----------
+# DO NOT copy notebooks/data/db here
+COPY notebooks/*.py ./notebooks/
+COPY notebooks/*.ipynb ./notebooks/
+
+# ---------- Data directory ----------
+# DB will be mounted here at runtime
+RUN mkdir -p /app/data/db
+
+# ---------- Default command ----------
+# CMD ["python", "-i"]

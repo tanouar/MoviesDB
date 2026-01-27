@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  sqlite-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sqlite
+    container_name: moviesdb_sqlite  
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - ../notebooks/data/db:/app/data/db
+    healthcheck:
+      test: >
+        CMD-SHELL
+        test -f /app/data/db/newIMDB.db &&
+        sqlite3 /app/data/db/newIMDB.db "SELECT 1;"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    command: ["sleep", "infinity"]
+
+    # stdin_open: true
+    # tty: true

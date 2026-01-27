@@ -13,3 +13,6 @@
 ## Étapes d’importation
 - Générer un fichier SQL (`dump.sql`) à partir de la base SQLite
 - Ajouter explicitement une longueur aux champs de type String pour une conversion en `VARCHAR(n) ` afin d’assurer la compatibilité avec MySQL
+
+
+
