@@ -3,13 +3,14 @@ version: "3.9"
 services:
   sqlite-app:
     build:
+    #context is the folder to send to docker daemon .. means parent folder
       context: ..
       dockerfile: docker/Dockerfile.sqlite
     container_name: moviesdb_sqlite  
     working_dir: /app
     volumes:
       - ..:/app
-      - ../notebooks/data/db:/app/data/db
+      - sqlite_db:/app/data/db
     healthcheck:
       test: >
         CMD-SHELL
@@ -22,3 +23,5 @@ services:
 
     # stdin_open: true
     # tty: true
+volumes:
+  sqlite_db:

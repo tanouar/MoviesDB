@@ -14,5 +14,9 @@
 - Générer un fichier SQL (`dump.sql`) à partir de la base SQLite
 - Ajouter explicitement une longueur aux champs de type String pour une conversion en `VARCHAR(n) ` afin d’assurer la compatibilité avec MySQL
 
-
-
+## Essai avec sqlite au lieu de sql
+- Créer un volume pour la persistance des données
+- Copier le fichier newIMDB.db dans le conteneur
+docker cp notebooks/data/db/newIMDB.db moviesdb_sqlite:/app/data/db/newIMDB.db
+- Lancer un script pour interroger la base de données
+docker exec -it moviesdb_sqlite python notebooks/test_runsql_queries.py

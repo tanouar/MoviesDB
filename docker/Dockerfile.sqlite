@@ -21,13 +21,16 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ---------- Application code ----------
-# DO NOT copy notebooks/data/db here
+# copy code
+COPY . .
 COPY notebooks/*.py ./notebooks/
 COPY notebooks/*.ipynb ./notebooks/
+# COPY data/db/newIMDB.db /app/data/db/newIMDB.db
 
-# ---------- Data directory ----------
-# DB will be mounted here at runtime
-RUN mkdir -p /app/data/db
+
+# # ---------- Data directory ----------
+# # DB will be mounted here at runtime
+# RUN mkdir -p /app/data/db
 
 # ---------- Default command ----------
 # CMD ["python", "-i"]
