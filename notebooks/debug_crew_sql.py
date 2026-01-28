@@ -44,9 +44,9 @@ meta = MetaData()
 # # création de la table ratings
 # ratings = Table(
 #     'ratings', meta, 
-#     Column('title_id', String(20), primary_key=True), 
+#     Column('title_id', String, primary_key=True), 
 #     Column('rating', Float), 
-#     Column('votes', String(20)),
+#     Column('votes', String),
 #     extend_existing=True)
 
 # meta.create_all(engine)
@@ -96,11 +96,11 @@ values = df_title_principals.to_records(index=False).tolist()
 # création de la table ratings
 crew = Table(
     'crew', meta, 
-    Column('title_id', String(20), primary_key=False), 
-    Column('person_id', String(20)), 
-    Column('category', String(20)), 
-    Column('job', String(200)), 
-    Column('characters', String(200)) )
+    Column('title_id', String, primary_key=False), 
+    Column('person_id', String), 
+    Column('category', String), 
+    Column('job', String), 
+    Column('characters', String) )
 meta.create_all(engine)
 
 # insertions des valeurs dans la table ratings
@@ -146,8 +146,8 @@ values = []
 # # création de la table ratings
 # episodes = Table(
 #     'episodes', meta, 
-#     Column('episode_title_id', String(20), primary_key=False), 
-#     Column('show_title_id', String(20)), 
+#     Column('episode_title_id', String, primary_key=False), 
+#     Column('show_title_id', String), 
 #     Column('season_number', Integer), 
 #     Column('episode_number', Integer))
 
@@ -196,15 +196,15 @@ values = []
 # # création de la table ratings
 # titles = Table(
 #     'titles', meta, 
-#     Column('title_id', String(20), primary_key=False), 
-#     Column('type', String(20)), 
-#     Column('primary_title', String(200)), 
-#     Column('original_title', String(200)), 
+#     Column('title_id', String, primary_key=False), 
+#     Column('type', String), 
+#     Column('primary_title', String), 
+#     Column('original_title', String), 
 #     Column('is_adult', Integer), 
 #     Column('premiered', Integer), 
 #     Column('ended', Integer), 
 #     Column('runtime_minutes', Integer), 
-#     Column('genres', String(200)))
+#     Column('genres', String))
 
 # meta.create_all(engine)
 
@@ -255,10 +255,10 @@ values = []
 # # création de la table ratings
 # people = Table(
 #     'people', meta, 
-#     Column('person_id', String(20), primary_key=False), 
-#     Column('name', String(200)), 
-#     Column('born', String(20)), 
-#     Column('died', String(20)))
+#     Column('person_id', String, primary_key=False), 
+#     Column('name', String), 
+#     Column('born', String), 
+#     Column('died', String))
 
 # meta.create_all(engine)
 

@@ -7,15 +7,14 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.sqlite
     container_name: moviesdb_sqlite  
-    working_dir: /app
+    working_dir: /data
     volumes:
-      - ..:/app
-      - sqlite_db:/app/data/db
+      - sqlite_db:/data
     healthcheck:
       test: >
         CMD-SHELL
-        test -f /app/data/db/newIMDB.db &&
-        sqlite3 /app/data/db/newIMDB.db "SELECT 1;"
+        test -f /data/newIMDB.db &&
+        sqlite3 /data/newIMDB.db "SELECT 1;"
       interval: 30s
       timeout: 5s
       retries: 3
@@ -25,3 +24,18 @@ services:
     # tty: true
 volumes:
   sqlite_db:
+
+# version: "3.9"
+
+# services:
+#   sqlite:
+#     image: keinos/sqlite3
+#     container_name: moviesdb_sqlite
+#     volumes:
+#       - sqlite_db:/data
+#     working_dir: /data
+#     stdin_open: true
+#     tty: true
+
+# volumes:
+#   sqlite_db:

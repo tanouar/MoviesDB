@@ -1,36 +1,9 @@
-# ---------- Base image ----------
-FROM python:3.11-slim
+# docker/Dockerfile.sqlite
 
-# ---------- Environment ----------
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    SQLITE_TMPDIR=/tmp
+FROM alpine:3.19
 
-# ---------- System deps ----------
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        sqlite3 \
-        ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Install sqlite
+RUN apk add --no-cache sqlite
 
-# ---------- Working directory ----------
-WORKDIR /app
-
-# ---------- Python deps (cached layer) ----------
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# ---------- Application code ----------
-# copy code
-COPY . .
-COPY notebooks/*.py ./notebooks/
-COPY notebooks/*.ipynb ./notebooks/
-# COPY data/db/newIMDB.db /app/data/db/newIMDB.db
-
-
-# # ---------- Data directory ----------
-# # DB will be mounted here at runtime
-# RUN mkdir -p /app/data/db
-
-# ---------- Default command ----------
-# CMD ["python", "-i"]
+# Set a neutral working directory
+WORKDIR /data
