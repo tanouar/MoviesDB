@@ -1,6 +1,6 @@
 # Databases / data
 data/
-notebooks/data/
+notebooks/
 *.db
 
 *.sqlite

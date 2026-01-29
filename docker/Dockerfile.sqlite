@@ -3,7 +3,7 @@
 FROM alpine:3.19
 
 # Install sqlite
-RUN apk add --no-cache sqlite
+RUN apk add --no-cache sqlite bash
 
-# Set a neutral working directory
+# Set a working directory
 WORKDIR /data

@@ -24,18 +24,3 @@ services:
     # tty: true
 volumes:
   sqlite_db:
-
-# version: "3.9"
-
-# services:
-#   sqlite:
-#     image: keinos/sqlite3
-#     container_name: moviesdb_sqlite
-#     volumes:
-#       - sqlite_db:/data
-#     working_dir: /data
-#     stdin_open: true
-#     tty: true
-
-# volumes:
-#   sqlite_db:
