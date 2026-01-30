@@ -75,7 +75,11 @@
 
 # Commandes Docker utilisées
 
-## Scripts Bash pour gérer le conteneur SQLite
+## Script python pour executer les commandes docker dans le notebook suivant : notebooks/run_sqlite_pipeline.ipynb
+
+### Description des commandes utilisées 
+
+- Scripts Bash pour gérer le conteneur SQLite
 
 ### `start_sqlite.sh`
 ```bash
@@ -86,30 +90,41 @@ docker compose -f docker/docker-compose-sqlite.yml up -d --build
 docker stop moviesdb_sqlite
 docker compose -f docker/docker-compose-sqlite.yml down
 ```
-## Copie de la base SQLite dans le conteneur
+### Copie de la base SQLite dans le conteneur
 
 ```bash
 docker cp notebooks/data/db/newIMDB.db moviesdb_sqlite:/data/newIMDB.db
 ```
 
-## Exécution de SQLite en mode interactif
+### Exécution de SQLite en mode interactif
 
 ```bash
 docker exec -it moviesdb_sqlite sqlite3 /data/newIMDB.db
 ctrl d pour quitter sqlite interactif
 ```
 
-## Eventuellement pour lancer un fichier avec des requêtes
+### Pour utiliser un fichier sql avec des requêtes
 
 ```bash
-docker cp utils/queries.sql moviesdb_sqlite:/data/marvel_queries.sql
+docker cp utils/marvel_queries.sql moviesdb_sqlite:/data/marvel_queries.sql
 
 .read /data/marvel_queries.sql
+ou 
+docker exec -i moviesdb_sqlite sqlite3 /data/newIMDB.db ".read /data/marvel_queries.sql"
 ```
 
-- pour formatter avec une table dans SQlite
+### Pour formatter une table dans SQlite
 
 ```bash
 .mode column
 .headers on
 ```
+
+### Pour executer les requêtes et sauvegarder données en tant que fichier csv
+```bash
+docker exec moviesdb_sqlite sqlite3 /data/newIMDB.db \
+  ".headers on" ".mode csv" \
+  ".output /data/nom_du_fichier.csv" \
+  "SELECT primary_title, rating, votes FROM titles JOIN ratings ON titles.title_id = ratings.title_id WHERE LOWER(primary_title) LIKE '%marvel%';" \
+  ".output stdout"
+```bash
