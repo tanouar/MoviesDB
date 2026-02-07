@@ -29,7 +29,7 @@
 
 ## Création du notebook de chargement
 
-- Création du notebook `IMDB_Database_Creation.ipynb` pour charger les fichiers TSV IMDb
+- Création du notebook `Create_SQlite_Database.ipynb` pour charger les fichiers TSV IMDb
 - Implémentation d’une fonction générique `Load_Table_From_TSV` permettant :
   - le nettoyage des données
   - la création des tables
@@ -52,7 +52,7 @@
 
 - Importer les données dans une BDD MYSQL dans Docker
 
-- Lancer le script python pour executer les commandes docker dans le notebook suivant : notebooks/Run_SQL_Queries.ipynb
+- Lancer le script python pour executer les commandes docker dans le notebook suivant : `notebooks/Run_SQL_Queries.ipynb`
 
 - Copier les fichiers (tsv ou autres) dans le conteneur 
 
@@ -106,7 +106,6 @@ docker exec $CONTAINER sqlite3 /data/newIMDB.db \
   "SELECT primary_title, rating, votes FROM titles JOIN ratings ON titles.title_id = ratings.title_id WHERE LOWER(primary_title) LIKE '%marvel%';" \
   ".output stdout"
 ```
-```
 
 ### Limitations 
 
@@ -148,6 +147,8 @@ docker exec -it $CONTAINER mysql -u root -p --local-infile IMDb
 ```bash
 SOURCE /tmp/imdb-create-tables.sql
 SOURCE /tmp/imdb-load-data.sql
+SOURCE /tmp/imdb-add-constraints.sql
+SOURCE /tmp/imdb-add-index.sql
 SOURCE /tmp/marvel_movies.sql
 ```
 - Copier le script des requêtes dans le conteneur et exécuter le script
@@ -161,7 +162,6 @@ SOURCE /tmp/marvel_movies.sql
 
 ```bash
 docker cp $CONTAINER:/tmp/marvel_movies.csv ${CSV_HOST_PATH}/marvel_movies.csv
-```
 ```
 ---
 

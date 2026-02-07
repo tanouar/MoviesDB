@@ -54,9 +54,9 @@ IGNORE 1 LINES
     @show_characters
 )
 SET
-        category  = NULLIF(@category, '\N'),
-        job = NULLIF(@job, '\N'),
-        show_characters = NULLIF(@show_characters, '\N');
+    category  = NULLIF(@category, '\N'),
+    job = NULLIF(@job, '\N'),
+    show_characters = NULLIF(@show_characters, '\N');
 
 
 -- Load Titles.tsv into Titles table
@@ -76,17 +76,17 @@ IGNORE 1 LINES
     genres
 )
 SET
-        title_type  = NULLIF(@title_type, '\N'),
-        primary_title = NULLIF(@primary_title, '\N'),
-        original_title = NULLIF(@original_title, '\N'),
-        is_adult = CASE
-            WHEN @is_adult = '1' THEN 1
-            WHEN @is_adult = '0' THEN 0
-            ELSE NULL
-        END,
-        start_year = NULLIF(@start_year, '\N'),
-        end_year = NULLIF(@end_year, '\N'),
-        runtime_minutes = NULLIF(@runtime_minutes, '\N');
+    title_type  = NULLIF(@title_type, '\N'),
+    primary_title = NULLIF(@primary_title, '\N'),
+    original_title = NULLIF(@original_title, '\N'),
+    is_adult = CASE
+        WHEN @is_adult = '1' THEN 1
+        WHEN @is_adult = '0' THEN 0
+        ELSE NULL
+    END,
+    start_year = NULLIF(@start_year, '\N'),
+    end_year = NULLIF(@end_year, '\N'),
+    runtime_minutes = NULLIF(@runtime_minutes, '\N');
 
 -- Load Title_ratings.tsv into Title_ratings table
 LOAD DATA LOCAL INFILE  '/tmp/raw/title.ratings.tsv'

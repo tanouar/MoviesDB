@@ -38,16 +38,16 @@ ALTER DATABASE IMDb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 -- Drop old tables if they exist
 
-DROP TABLE IF EXISTS Titles;
-DROP TABLE IF EXISTS Ratings;
+DROP TABLE IF EXISTS titles;
+DROP TABLE IF EXISTS ratings;
 
-DROP TABLE IF EXISTS Episodes;
-DROP TABLE IF EXISTS People;
-DROP TABLE IF EXISTS Crew;
+DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS people;
+DROP TABLE IF EXISTS crew;
 
 -- Create tables only
 
-CREATE TABLE Titles (
+CREATE TABLE titles (
   title_id 			  VARCHAR(255) NOT NULL, -- not null bc PK
   title_type 			VARCHAR(50),
   primary_title 	TEXT, 
@@ -60,7 +60,7 @@ CREATE TABLE Titles (
   PRIMARY KEY (title_id)
 );
 
-CREATE TABLE Ratings (
+CREATE TABLE ratings (
   title_id 	VARCHAR(255) NOT NULL, -- not null bc PK
   rating	FLOAT,
   votes		INTEGER,
@@ -68,16 +68,16 @@ CREATE TABLE Ratings (
 );
 
 
-CREATE TABLE Episodes (
+CREATE TABLE episodes (
   episode_title_id  VARCHAR(255) NOT NULL, -- not null bc PK
-  show_title_id   VARCHAR(255) NOT NULL, -- fk to Titles.title_id
+  show_title_id   VARCHAR(255) NOT NULL, -- fk to titles.title_id
   season_number   INTEGER,
   episode_number  INTEGER,
   PRIMARY KEY (episode_title_id)
 );
 
 
-CREATE TABLE People (
+CREATE TABLE people (
   person_id   VARCHAR(255) NOT NULL, -- not null bc PK
   person_name VARCHAR(255) NOT NULL, 
   born    SMALLINT, 
@@ -85,7 +85,7 @@ CREATE TABLE People (
   PRIMARY KEY (person_id) 
 );
 
-CREATE TABLE Crew (
+CREATE TABLE crew (
   title_id  VARCHAR(255) NOT NULL, -- not null bc PK
   person_id VARCHAR(255) NOT NULL, -- fk 
   category  VARCHAR(255),

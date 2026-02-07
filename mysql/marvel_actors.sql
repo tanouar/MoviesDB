@@ -28,18 +28,16 @@ WITH
             AND t.start_year IS NOT NULL
             AND t.start_year >= 2008 AND t.start_year <= 2026
     )
-SELECT DISTINCT
-    c.show_characters AS character_name
-FROM titles AS t
-    INNER JOIN crew AS c
-    ON t.title_id = c.title_id
-WHERE
-    t.title_id IN (
+SELECT DISTINCT people.person_id, people.person_name
+FROM people
+JOIN crew
+ON people.person_id = crew.person_id
+    WHERE crew.title_id IN (
         SELECT title_id
         FROM marvel_titles
     )
-    AND c.show_characters IS NOT NULL
-    AND c.show_characters NOT LIKE '%Self%'
-    AND LOWER(c.category) != 'self'
-    AND c.category NOT LIKE 'archive_%'
-ORDER BY c.show_characters;
+AND crew.show_characters IS NOT NULL
+AND crew.show_characters NOT LIKE '%Self%'
+AND LOWER(crew.category) != 'self'
+AND crew.category NOT LIKE 'archive_%'
+ORDER BY person_name;

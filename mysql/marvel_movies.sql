@@ -7,7 +7,7 @@ SELECT
     primary_title,
     genres,
     start_year 
-FROM Titles AS t
+FROM titles AS t
 WHERE
     REGEXP_REPLACE(
         LOWER(primary_title),

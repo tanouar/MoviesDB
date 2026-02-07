@@ -1,14 +1,14 @@
-ALTER TABLE Titles
+ALTER TABLE titles
 ADD PRIMARY KEY (title_id);
 
-ALTER TABLE Episodes
+ALTER TABLE episodes
 ADD PRIMARY KEY (episode_title_id);
 
-ALTER TABLE People
+ALTER TABLE people
 ADD PRIMARY KEY (person_id);
 
 
-ALTER TABLE Ratings
+ALTER TABLE ratings
 ADD PRIMARY KEY (title_id);
 
 -- SET foreign_key_checks = 0;
