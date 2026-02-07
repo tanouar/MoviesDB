@@ -11,7 +11,7 @@ services:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: moviesdb
+      MYSQL_DATABASE: IMDb
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:

@@ -47,84 +47,125 @@
 
 ---
 
-# Conversion et import dans MySQL
+# Méthode 
+- Télécharger les données TSV (Lancer la première )
 
-## Étapes d’importation
+- Importer les données dans une BDD MYSQL dans Docker
+
+- Lancer le script python pour executer les commandes docker dans le notebook suivant : notebooks/Run_SQL_Queries.ipynb
+
+- Copier les fichiers (tsv ou autres) dans le conteneur 
+
+- Exécuter les requêtes dans le conteneur 
+
+# Étapes d’importation
 
 - Définition explicite de la longueur des champs de type `String` pour assurer une conversion correcte en `VARCHAR(n)` et la compatibilité avec MySQL
 - Génération d’un fichier SQL (`newIMDB.sql`) à partir de la base SQLite  
   *(export réalisé via DB Browser for SQLite)*
 
-## Limitation rencontrée
+## Limitation d'importation de fichier SQL
 
 - **Taille du fichier SQL** : ~19 Go  
 - **Mémoire disponible** : 8 Go de RAM  
 - **Conséquence** : impossibilité de manipuler ou d’importer le fichier SQL 
 
----
-
-# Alternative : utilisation de SQLite dans Docker
-
-## Approche retenue
+## Approche 1 : Créer un fichier SQlite (.db) à partir des TSV avec Python et l'importer dans Docker  
 
 - Utilisation directe de SQLite dans un conteneur Docker afin d’éviter la génération d’un fichier SQL massif
 - Création d’un volume Docker pour assurer la persistance des données
 - Exécution des requêtes SQL directement via `sqlite3` dans le conteneur
 
----
-
-# Commandes Docker utilisées
-
-## Script python pour executer les commandes docker dans le notebook suivant : notebooks/run_sqlite_pipeline.ipynb
-
-### Description des commandes utilisées 
-
-- Scripts Bash pour gérer le conteneur SQLite
-
-### `start_sqlite.sh`
-```bash
-docker compose -f docker/docker-compose-sqlite.yml up -d --build
-```
-### `stop_sqlite.sh`
-```bash
-docker stop moviesdb_sqlite
-docker compose -f docker/docker-compose-sqlite.yml down
-```
-### Copie de la base SQLite dans le conteneur
-
-```bash
-docker cp notebooks/data/db/newIMDB.db moviesdb_sqlite:/data/newIMDB.db
-```
-
-### Exécution de SQLite en mode interactif
+## Exécution de SQLite en mode interactif
 
 ```bash
 docker exec -it moviesdb_sqlite sqlite3 /data/newIMDB.db
-ctrl d pour quitter sqlite interactif
-```
 
-### Pour utiliser un fichier sql avec des requêtes
+```
+NB- ctrl d pour quitter 
+
+## Pour utiliser un fichier sql avec des requêtes
 
 ```bash
-docker cp utils/marvel_queries.sql moviesdb_sqlite:/data/marvel_queries.sql
-
-.read /data/marvel_queries.sql
-ou 
-docker exec -i moviesdb_sqlite sqlite3 /data/newIMDB.db ".read /data/marvel_queries.sql"
+docker exec -i $CONTAINER sqlite3 /data/newIMDB.db ".read /tmp/marvel_queries.sql"
 ```
 
-### Pour formatter une table dans SQlite
+## Pour formatter une table dans SQLite
 
 ```bash
 .mode column
 .headers on
 ```
 
-### Pour executer les requêtes et sauvegarder données en tant que fichier csv
+## Pour exécuter les requêtes et sauvegarder données en tant que fichier csv
+
 ```bash
-docker exec moviesdb_sqlite sqlite3 /data/newIMDB.db \
+docker exec $CONTAINER sqlite3 /data/newIMDB.db \
   ".headers on" ".mode csv" \
-  ".output /data/nom_du_fichier.csv" \
+  ".output $CONTAINER_FILE_PATH/nom_du_fichier.csv" \
   "SELECT primary_title, rating, votes FROM titles JOIN ratings ON titles.title_id = ratings.title_id WHERE LOWER(primary_title) LIKE '%marvel%';" \
   ".output stdout"
+```
+```
+
+### Limitations 
+
+- Besoin d'écrire des requêtes pour chercher des patterns dans les titres de fimls Marvel 
+- On ne peut pas utiliser REGEXP directement avec SQlite
+- Il nous faut une version SQL 
+
+
+## Approche 2 :  Conversion de fichiers TSV en BDD MYSQL 
+
+
+- Utilisation de MYSQL dans un conteneur Docker
+- Conversion de fichiers TSV en BDD MYSQL directement, sans passer par SQlite
+- Adaptation d'un script provenant de github pour créer les tables et utiliser les fichiers TSV pour charger les données:
+https://github.com/dlwhittenbury/MySQL_IMDb_Project 
+
+
+### Copier les fichiers pour créer et charger les données dans un dossier /tmp/
+
+Définir les variables suivantes pour faciliter la réutilisation des chemins et noms de conteneurs :
+
 ```bash
+CONTAINER=moviesdb_mysql
+CSV_HOST_PATH=data/tests
+SQL_FILE_PATH=utils
+CONTAINER_FILE_PATH=/tmp/
+```
+
+Utiliser ces variables dans les commandes :
+
+```bash
+docker cp data/raw/ $CONTAINER:/tmp/raw/
+docker cp mysql/imdb-create-tables.sql $CONTAINER:/tmp/
+docker cp mysql/imdb-load-data.sql $CONTAINER:/tmp/
+docker exec -it $CONTAINER mysql -u root -p --local-infile IMDb
+```
+
+#### Commandes MYSQL utilisées
+```bash
+SOURCE /tmp/imdb-create-tables.sql
+SOURCE /tmp/imdb-load-data.sql
+SOURCE /tmp/marvel_movies.sql
+```
+- Copier le script des requêtes dans le conteneur et exécuter le script
+
+```bash
+docker cp ${SQL_FILE_PATH}/marvel_movies.sql $CONTAINER:/tmp/
+SOURCE /tmp/marvel_movies.sql
+```
+
+- Convertir les résultats et exporter en tant que CSV 
+
+```bash
+docker cp $CONTAINER:/tmp/marvel_movies.csv ${CSV_HOST_PATH}/marvel_movies.csv
+```
+```
+---
+
+
+
+
+
