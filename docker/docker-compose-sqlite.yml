@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  sqlite-app:
+    build:
+    #context is the folder to send to docker daemon .. means parent folder
+      context: ..
+      dockerfile: docker/Dockerfile.sqlite
+    container_name: moviesdb_sqlite  
+    working_dir: /data
+    volumes:
+      - sqlite_db:/data
+    healthcheck:
+      test: >
+        CMD-SHELL
+        test -f /data/newIMDB.db &&
+        sqlite3 /data/newIMDB.db "SELECT 1;"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    command: ["sleep", "infinity"]
+
+    # stdin_open: true
+    # tty: true
+volumes:
+  sqlite_db:

@@ -1,0 +1,9 @@
+# docker/Dockerfile.sqlite
+
+FROM alpine:3.19
+
+# Install sqlite
+RUN apk add --no-cache sqlite bash
+
+# Set a working directory
+WORKDIR /data

@@ -1,0 +1,29 @@
+# Databases / data
+data/
+notebooks/
+*.db
+
+*.sqlite
+*.sql
+
+# Large datasets
+*.tsv
+*.tsv.gz
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Git
+.git/
+
+# OS
+.DS_Store
+
+# Docker volumes (if any)
+docker-volumes/

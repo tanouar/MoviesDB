@@ -2,7 +2,7 @@ FROM mysql:8.0
 
 # Définir les variables d'environnement pour MySQL
 ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=moviesdb
+ENV MYSQL_DATABASE=IMDb
 ENV MYSQL_USER=user
 ENV MYSQL_PASSWORD=password
 
