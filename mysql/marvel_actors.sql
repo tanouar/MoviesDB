@@ -29,6 +29,8 @@ WITH
             AND t.start_year >= 2008 AND t.start_year <= 2026
     )
 SELECT DISTINCT people.person_id, people.person_name
+INTO OUTFILE '/var/lib/mysql-files/marvel_actors.csv' 
+FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
 FROM people
 JOIN crew
 ON people.person_id = crew.person_id

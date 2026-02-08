@@ -27,25 +27,25 @@ WITH
             AND t.genres NOT LIKE '%Animation%'
             AND t.genres NOT LIKE '%Crime%'
             AND t.start_year IS NOT NULL
-            AND t.start_year >= 2008 AND t.start_year <= 2026
+            AND t.start_year >= 2008
+            AND t.start_year <= 2026
     )
-SELECT
-    crew.title_id, people.person_id,people.person_name,crew.job,crew.category
-    FROM crew
-    JOIN people
-    ON crew.person_id = people.person_id
-    WHERE crew.title_id IN (
+SELECT crew.title_id, people.person_id, people.person_name, crew.job, crew.category 
+INTO OUTFILE '/var/lib/mysql-files/marvel_directors.csv' 
+FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+FROM crew
+    JOIN people ON crew.person_id = people.person_id
+WHERE
+    crew.title_id IN (
         SELECT title_id
         FROM marvel_titles
     )
-    AND 
-    (  LOWER(crew.job) LIKE '%director%'
-      OR LOWER(crew.job) LIKE '%producer%'
+    AND (
+        LOWER(crew.job) LIKE '%director%'
+        OR LOWER(crew.job) LIKE '%producer%'
     )
-    AND 
-    (LOWER(crew.category) = 'director'
-      OR LOWER(crew.category) = 'producer'
+    AND (
+        LOWER(crew.category) = 'director'
+        OR LOWER(crew.category) = 'producer'
     )
-     AND crew.show_characters IS NULL
-
-
+    AND crew.show_characters IS NULL

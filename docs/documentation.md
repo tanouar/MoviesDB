@@ -50,13 +50,10 @@
 # Méthode 
 - Télécharger les données TSV (Lancer la première )
 
-- Importer les données dans une BDD MYSQL dans Docker
+- Importer les données dans une BDD MYSQL dans Docker avec le script `notebooks/Create_MySQL_Database.ipynb`
 
 - Lancer le script python pour executer les commandes docker dans le notebook suivant : `notebooks/Run_SQL_Queries.ipynb`
 
-- Copier les fichiers (tsv ou autres) dans le conteneur 
-
-- Exécuter les requêtes dans le conteneur 
 
 # Étapes d’importation
 

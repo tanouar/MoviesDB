@@ -10,17 +10,8 @@ To use the IMDb scripts:
 1) Open MySQL in terminal:
  $ mysql -u root -p --local-infile IMDb
 
-2) Create IMDb data base in MySQL on Docker:
- mysql> SOURCE /tmp/imdb-create-tables.sql
-
-3) Load data using this script in MySQL:
+2) Load data using this script in MySQL:
  mysql> SOURCE  /tmp/imdb-load-data.sql
-
-4) Add constraints to the IMDb database in MySQL
- mysql> SOURCE  /tmp/imdb-add-constraints.sql
-
-5) Add index to the IMDb database in MySQL
- mysql> SOURCE  /tmp/imdb-add-index.sql
  
 */
 
@@ -32,7 +23,7 @@ SET GLOBAL local_infile = 1;
 -- Load Episode.tsv into Episode table
 
 LOAD DATA LOCAL INFILE '/tmp/raw/title.episode.tsv'
-INTO TABLE Episodes
+INTO TABLE episodes
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
 (episode_title_id, show_title_id, @season, @episode)
@@ -42,8 +33,9 @@ SET
 
 -- Load Principals.tsv into Principals table
 LOAD DATA LOCAL INFILE '/tmp/raw/title.principals.tsv'
-INTO TABLE Crew
+INTO TABLE crew
 COLUMNS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (
     title_id,        -- tconst
@@ -61,7 +53,7 @@ SET
 
 -- Load Titles.tsv into Titles table
 LOAD DATA LOCAL INFILE '/tmp/raw/title.basics.tsv'
-INTO TABLE Titles
+INTO TABLE titles
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
 (
@@ -90,7 +82,7 @@ SET
 
 -- Load Title_ratings.tsv into Title_ratings table
 LOAD DATA LOCAL INFILE  '/tmp/raw/title.ratings.tsv'
-INTO TABLE Ratings
+INTO TABLE ratings
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
 (title_id, @rating, @votes)
@@ -102,7 +94,7 @@ SET
 
 -- Load People.tsv into People table
 LOAD DATA LOCAL INFILE '/tmp/raw/name.basics.tsv'
-INTO TABLE People
+INTO TABLE people
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
 (person_id, @person_name, @born, @died, @primaryProfession, @knownForTitles)

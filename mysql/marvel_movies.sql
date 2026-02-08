@@ -7,6 +7,8 @@ SELECT
     primary_title,
     genres,
     start_year 
+INTO OUTFILE '/var/lib/mysql-files/marvel_movies.csv' 
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'
 FROM titles AS t
 WHERE
     REGEXP_REPLACE(

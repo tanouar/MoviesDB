@@ -30,6 +30,11 @@ WITH
     )
 SELECT DISTINCT
     c.show_characters AS character_name
+INTO OUTFILE '/var/lib/mysql-files/marvel_characters.csv' 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+ESCAPED BY '"' 
+LINES TERMINATED BY '\n'
 FROM titles AS t
     INNER JOIN crew AS c
     ON t.title_id = c.title_id
