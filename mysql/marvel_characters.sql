@@ -4,12 +4,12 @@ WITH
         FROM titles AS t
         WHERE
             REGEXP_REPLACE(
-                LOWER(primary_title),
+                TRIM(LOWER(primary_title)),
                 '[^a-z0-9 ]',
                 ''
             ) REGEXP '^(iron man|captain america|thor|the avengers|avengers|guardians of the galaxy|antman|hulk|black panther|doctor strange|captain marvel|spiderman|black widow|shangchi|wandavision|loki|hawkeye|moon knight|ms marvel|shehulk|eternals|deadpool|the marvels)([^a-z]|$)'
             AND REGEXP_REPLACE(
-                LOWER(primary_title),
+                TRIM(LOWER(primary_title)),
                 '[^a-z0-9 ]',
                 ''
             ) NOT REGEXP '(lego|reassembled|swat|business|cut|raimi|fan|bus|premiere)'
