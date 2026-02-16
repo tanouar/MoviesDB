@@ -1,0 +1,55 @@
+name: PEP8 Compliance Check
+
+# 🔔 Déclencheurs du workflow
+on:
+  push:
+    branches: [ main, features, fix ]
+    paths:
+      - '**.py'  # Se déclenche uniquement si des fichiers Python sont modifiés
+      - 'requirements-lint.txt'
+      - '.pycodestyle'
+      - 'tests/check_pep8.py'
+  
+  pull_request:
+    branches: [ main, features, fix ]
+    paths:
+      - '**.py'
+  
+  workflow_dispatch:  # Permet le déclenchement manuel
+
+jobs:
+  pep8-check:
+    name: Vérification PEP8
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout du code
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Configuration de Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: 📦 Installation des dépendances de linting
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-lint.txt
+    
+    - name: 🔍 Vérification PEP8 de tout le repository
+      run: |
+        python tests/check_pep8.py
+    
+    - name: 📊 Rapport détaillé avec flake8 (si échec)
+      if: failure()
+      run: |
+        echo "=========================================="
+        echo "📊 RAPPORT DÉTAILLÉ AVEC FLAKE8"
+        echo "=========================================="
+        echo ""
+        echo "🔴 Erreurs critiques (syntaxe, undefined names):"
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        echo ""
+        echo "⚠️  Statistiques générales:"
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics

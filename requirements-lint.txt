@@ -1,0 +1,14 @@
+# Vérification PEP8
+pycodestyle>=2.11.0
+
+# Linting avancé
+flake8>=6.1.0
+
+# Auto-correction PEP8
+autopep8>=2.0.4
+
+# Analyse de complexité
+mccabe>=0.7.0
+
+# Vérification des imports
+flake8-isort>=6.1.0
