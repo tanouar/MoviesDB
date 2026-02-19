@@ -7,13 +7,17 @@ services:
       context: .
       dockerfile: Dockerfile.mysql
     container_name: moviesdb_mysql
+    command: --local-infile=1
     ports:
       - "3306:3306"
+    restart: always
+    env_file:
+      - ../.env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: IMDb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ../data/tests:/var/lib/mysql-files

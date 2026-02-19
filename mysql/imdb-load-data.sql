@@ -22,7 +22,7 @@ SET GLOBAL local_infile = 1;
 
 -- Load Episode.tsv into Episode table
 
-LOAD DATA LOCAL INFILE '/tmp/raw/title.episode.tsv'
+LOAD DATA LOCAL INFILE '/tmp/title.episode.tsv'
 INTO TABLE episodes
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
@@ -32,7 +32,7 @@ SET
   episode_number = NULLIF(@episode, '\N');
 
 -- Load Principals.tsv into Principals table
-LOAD DATA LOCAL INFILE '/tmp/raw/title.principals.tsv'
+LOAD DATA LOCAL INFILE '/tmp/title.principals.tsv'
 INTO TABLE crew
 COLUMNS TERMINATED BY '\t'
 LINES TERMINATED BY '\n'
@@ -52,7 +52,7 @@ SET
 
 
 -- Load Titles.tsv into Titles table
-LOAD DATA LOCAL INFILE '/tmp/raw/title.basics.tsv'
+LOAD DATA LOCAL INFILE '/tmp/title.basics.tsv'
 INTO TABLE titles
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
@@ -81,7 +81,7 @@ SET
     runtime_minutes = NULLIF(@runtime_minutes, '\N');
 
 -- Load Title_ratings.tsv into Title_ratings table
-LOAD DATA LOCAL INFILE  '/tmp/raw/title.ratings.tsv'
+LOAD DATA LOCAL INFILE  '/tmp/title.ratings.tsv'
 INTO TABLE ratings
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
@@ -93,7 +93,7 @@ SET
 
 
 -- Load People.tsv into People table
-LOAD DATA LOCAL INFILE '/tmp/raw/name.basics.tsv'
+LOAD DATA LOCAL INFILE '/tmp/name.basics.tsv'
 INTO TABLE people
 COLUMNS TERMINATED BY '\t'
 IGNORE 1 LINES
