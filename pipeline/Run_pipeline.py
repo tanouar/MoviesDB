@@ -21,7 +21,11 @@ DOCKER = "docker"
 MYSQL_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD")
 
 if not MYSQL_PASSWORD:
-    raise RuntimeError("MYSQL_ROOT_PASSWORD not set")
+    raise RuntimeError(
+        "MYSQL_ROOT_PASSWORD not set.\n"
+        "Create a .env file in project root.\n"
+        "See .env.example for required variables."
+    )
 
 env = os.environ.copy()
 env["MYSQL_PWD"] = MYSQL_PASSWORD

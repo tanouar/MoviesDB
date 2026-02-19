@@ -162,7 +162,17 @@ docker cp $CONTAINER:/tmp/marvel_movies.csv ${CSV_HOST_PATH}/marvel_movies.csv
 ```
 ---
 
+# Exécuter le script dans le dossier pipeline (Run_pipeline.py) pour créer la base, charger les données, et lancer les requêtes sql 
 
+## Rajouter un fichier .env dans le dossier racine avec les identifiants:
 
+Exemple: 
+```bash
+MYSQL_ROOT_PASSWORD=changeme
+MYSQL_DATABASE=IMDb
+MYSQL_USER=appuser
+MYSQL_PASSWORD=changeme
+
+```
 
 
