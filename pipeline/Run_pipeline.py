@@ -58,7 +58,10 @@ def download_files():
         if response.status_code == 200:
             with open(target_path, 'wb') as f:
                 f.write(response.raw.read())
-        tsv_path = target_path.replace(".gz", "")
+        target_path = Path(target_path)
+
+        if target_path.suffix == ".gz":
+            tsv_path = target_path.with_suffix("")
 
         with gzip.open(target_path, 'rb') as gz_file:
             with open(tsv_path, 'wb') as f:
