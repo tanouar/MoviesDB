@@ -34,11 +34,23 @@ env["MYSQL_PWD"] = MYSQL_PASSWORD
 
 
 def run_command(cmd, check=True):
-    """Run command and print output live."""
+    """Run command"""
     print(f"\nRunning: {' '.join(map(str, cmd))}")
-    result = subprocess.run(cmd, text=True)
-    if check and result.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}")
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print("STDOUT:\n", result.stdout)
+        print("STDERR:\n", result.stderr)
+        if check:
+            raise RuntimeError(
+                f"Command failed with exit code {result.returncode}"
+            )
+
     return result
 
 
@@ -100,13 +112,26 @@ def wait_for_mysql(container, timeout=60):
     subprocess.run(["docker", "ps"])
 
     while time.time() - start < timeout:
+        # result = subprocess.run(
+        #     [DOCKER, "exec", "-e",
+        #      f"MYSQL_PWD={MYSQL_PASSWORD}",
+        #      container,
+        #      "mysqladmin",
+        #      "-u", "root",
+        #      "ping"],
+        #     capture_output=True,
+        #     text=True
+        # )
         result = subprocess.run(
-            [DOCKER, "exec", "-e",
-             f"MYSQL_PWD={MYSQL_PASSWORD}",
-             container,
-             "mysqladmin",
-             "-u", "root",
-             "ping"],
+            [
+                DOCKER, "exec",
+                "-e", f"MYSQL_PWD={MYSQL_PASSWORD}",
+                CONTAINER,
+                "mysqladmin",
+                "-h", "127.0.0.1",
+                "-u", "root",
+                "ping"
+            ],
             capture_output=True,
             text=True
         )
@@ -129,7 +154,18 @@ def execute_sql_file(sql_file):
     print(f"\nExecuting SQL file: {sql_file.name}")
 
     # Remove CSV file if it exists in container
+    start = time.time()
 
+    while time.time() - start < 30:
+        sock = subprocess.run(
+            [DOCKER, "exec", CONTAINER, "sh", "-c",
+             "test -S /var/run/mysqld/mysqld.sock && echo 'ready' || echo 'not ready'"],
+            capture_output=True,
+            text=True
+        )
+        if sock.returncode == 0 and "ready" in sock.stdout:
+            print("MySQL socket is ready.")
+            break
     with open(sql_file, "rb") as f:
         result = subprocess.run(
             [DOCKER, "exec", "-e",
@@ -200,27 +236,33 @@ def update_csv_file(file):
 def main():
 
     # Start Docker container
-    run_command([
-        DOCKER, "compose",
-        "-f", str(COMPOSE_FILE),
-        "up", "-d"
-    ])
+    try:
+        run_command([
+            DOCKER, "compose",
+            "-f", str(COMPOSE_FILE),
+            "up", "-d"
+        ])
+        print("Docker container started successfully.")
+    except Exception as e:
+        print(f"Error starting Docker container: {e}")
+        return
 
     # Download files from IMDB
-    download_files()
+    # download_files()
 
     # Copy TSV files into container
-    copy_tsv_to_container()
-    db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
-                      "imdb-load-data.sql", "imdb-add-constraints.sql",
-                      "imdb-add-index.sql"]
-    #  Wait for MySQL to be ready
-    wait_for_mysql(CONTAINER)
+    # copy_tsv_to_container()
 
-    # Execute SQL files to create DB, tables, load data, add constraints and
-    # indexes
-    for sql in db_setup_files:
-        execute_sql_file(SQL_DIR / sql)
+    # db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
+    #                   "imdb-load-data.sql", "imdb-add-constraints.sql",
+    #                   "imdb-add-index.sql"]
+
+    #  Wait for MySQL to be ready
+    # wait_for_mysql(CONTAINER)
+
+    # Execute SQL files to create DB, tables, load data, add constraints and indexes
+    # for sql in db_setup_files:
+    #     execute_sql_file(SQL_DIR / sql)
 
     #  Get SQL files
     sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
@@ -240,7 +282,7 @@ def main():
     for csv in DATA_DIR.glob("*marvel*.csv"):
         update_csv_file(csv)
 
-    # cleanup()
+    cleanup()
 
 
 if __name__ == "__main__":
