@@ -248,22 +248,22 @@ def main():
         return
 
     # Download files from IMDB
-    # download_files()
+    download_files()
 
     # Copy TSV files into container
-    # copy_tsv_to_container()
+    copy_tsv_to_container()
 
-    # db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
-    #                   "imdb-load-data.sql", "imdb-add-constraints.sql",
-    #                   "imdb-add-index.sql"]
+    db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
+                      "imdb-load-data.sql", "imdb-add-constraints.sql",
+                      "imdb-add-index.sql"]
 
     #  Wait for MySQL to be ready
-    # wait_for_mysql(CONTAINER)
+    wait_for_mysql(CONTAINER)
 
     # Execute SQL files to create DB, tables, load data, add constraints
     # and indexes
-    # for sql in db_setup_files:
-    #     execute_sql_file(SQL_DIR / sql)
+    for sql in db_setup_files:
+        execute_sql_file(SQL_DIR / sql)
 
     #  Get SQL files
     sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
