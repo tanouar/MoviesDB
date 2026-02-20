@@ -159,7 +159,7 @@ def execute_sql_file(sql_file):
     while time.time() - start < 30:
         sock = subprocess.run(
             [DOCKER, "exec", CONTAINER, "sh", "-c",
-             "test -S /var/run/mysqld/mysqld.sock && echo 'ready' || echo 'not ready'"],
+             "test -S /var/run/mysqld/mysqld.sock"],
             capture_output=True,
             text=True
         )
@@ -260,7 +260,8 @@ def main():
     #  Wait for MySQL to be ready
     # wait_for_mysql(CONTAINER)
 
-    # Execute SQL files to create DB, tables, load data, add constraints and indexes
+    # Execute SQL files to create DB, tables, load data, add constraints
+    # and indexes
     # for sql in db_setup_files:
     #     execute_sql_file(SQL_DIR / sql)
 
