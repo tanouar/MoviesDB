@@ -8,13 +8,13 @@ import requests
 import gzip
 from tqdm.notebook import trange
 
-#### CONFIG ####
+# Config
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
 COMPOSE_FILE = PROJECT_ROOT / "docker" / "docker-compose.yml"
-SQL_DIR = PROJECT_ROOT / "mysql"  
-DATA_DIR = PROJECT_ROOT / "data" / "tests"        
+SQL_DIR = PROJECT_ROOT / "mysql"
+DATA_DIR = PROJECT_ROOT / "data" / "tests"
 CONTAINER = "moviesdb_mysql"
 DB = "IMDb"
 DOCKER = "docker"
@@ -30,7 +30,8 @@ if not MYSQL_PASSWORD:
 env = os.environ.copy()
 env["MYSQL_PWD"] = MYSQL_PASSWORD
 
-#### UTILITIES ####
+# functions
+
 
 def run_command(cmd, check=True):
     """Run command and print output live."""
@@ -40,21 +41,22 @@ def run_command(cmd, check=True):
         raise RuntimeError(f"Command failed: {' '.join(cmd)}")
     return result
 
+
 def download_files():
-    #Importer les données IMDB
+    # Importer les données IMDB
     urls = ['https://datasets.imdbws.com/name.basics.tsv.gz',
-       'https://datasets.imdbws.com/title.basics.tsv.gz', 
-       'https://datasets.imdbws.com/title.episode.tsv.gz', 
-       'https://datasets.imdbws.com/title.principals.tsv.gz', 
-       'https://datasets.imdbws.com/title.ratings.tsv.gz']
+            'https://datasets.imdbws.com/title.basics.tsv.gz',
+            'https://datasets.imdbws.com/title.episode.tsv.gz',
+            'https://datasets.imdbws.com/title.principals.tsv.gz',
+            'https://datasets.imdbws.com/title.ratings.tsv.gz']
 
     # telechargement des fichiers
     for url in urls:
         filename = url.split('/')[-1]
-        target_path = PROJECT_ROOT / "data" / "raw" / filename  
+        target_path = PROJECT_ROOT / "data" / "raw" / filename
         print(target_path)
-        response = requests.get(url, stream=True)  
-    
+        response = requests.get(url, stream=True)
+
         if response.status_code == 200:
             with open(target_path, 'wb') as f:
                 f.write(response.raw.read())
@@ -66,17 +68,30 @@ def download_files():
         with gzip.open(target_path, 'rb') as gz_file:
             with open(tsv_path, 'wb') as f:
                 f.write(gz_file.read())
-                
+
         for i in trange(1, desc='Statut'):
             print('Fichier téléchargé :', tsv_path)
 
+
 def copy_tsv_to_container():
-    file_names = ["name.basics.tsv", "title.basics.tsv", "title.episode.tsv", "title.principals.tsv", "title.ratings.tsv"]
+    file_names = [
+        "name.basics.tsv",
+        "title.basics.tsv",
+        "title.episode.tsv",
+        "title.principals.tsv",
+        "title.ratings.tsv"]
 
     for file in file_names:
-        print(f"📁 Copying {file} into docker container")
-        result = subprocess.run(["docker", "cp", f"{PROJECT_ROOT}/data/raw/{file}", f"{CONTAINER}:/tmp/{file}"], capture_output=True, text=True, check=False)
+        print(f"Copying {file} into docker container")
+        result = subprocess.run(["docker",
+                                 "cp",
+                                 f"{PROJECT_ROOT}/data/raw/{file}",
+                                 f"{CONTAINER}:/tmp/{file}"],
+                                capture_output=True,
+                                text=True,
+                                check=False)
         print(result.stderr)
+
 
 def wait_for_mysql(container, timeout=60):
     """Wait until MySQL inside container is ready."""
@@ -86,12 +101,12 @@ def wait_for_mysql(container, timeout=60):
 
     while time.time() - start < timeout:
         result = subprocess.run(
-            [DOCKER, "exec", "-e", 
+            [DOCKER, "exec", "-e",
              f"MYSQL_PWD={MYSQL_PASSWORD}",
-            container,
-            "mysqladmin",
-            "-u", "root",
-            "ping"],
+             container,
+             "mysqladmin",
+             "-u", "root",
+             "ping"],
             capture_output=True,
             text=True
         )
@@ -114,14 +129,14 @@ def execute_sql_file(sql_file):
     print(f"\nExecuting SQL file: {sql_file.name}")
 
     # Remove CSV file if it exists in container
-         
+
     with open(sql_file, "rb") as f:
         result = subprocess.run(
             [DOCKER, "exec", "-e",
-             f"MYSQL_PWD={MYSQL_PASSWORD}","-i",
+             f"MYSQL_PWD={MYSQL_PASSWORD}", "-i",
              CONTAINER,
-             "mysql","--local-infile=1",
-             "-u", 
+             "mysql", "--local-infile=1",
+             "-u",
              "root",
              DB],
             stdin=f,
@@ -132,16 +147,23 @@ def execute_sql_file(sql_file):
 
     print(f" Finished running {sql_file.name}")
 
+
 def cleanup():
     """Stop and remove Docker container."""
     print("Cleaning up: Stopping Docker container...")
     run_command([DOCKER, "compose", "-f", str(COMPOSE_FILE), "down"])
 
+
 def update_csv_file(file):
     """Update a CSV file with new column names."""
-    columns_movies = ["title_id","primary_title","genres","start_year"]
+    columns_movies = ["title_id", "primary_title", "genres", "start_year"]
     columns_characters = ["character_name"]
-    columns_directors = ["title_id", "person_id", "person_name", "job", "category"]
+    columns_directors = [
+        "title_id",
+        "person_id",
+        "person_name",
+        "job",
+        "category"]
     columns_actors = ["person_id", "person_name"]
 
     if "movies" in file.name:
@@ -153,16 +175,27 @@ def update_csv_file(file):
     elif "actors" in file.name:
         columns = columns_actors
     if "characters" in file.name:
-        marvel_df = pd.read_csv(file, encoding='latin-1', header=0,   names= columns_characters)
+        marvel_df = pd.read_csv(
+            file,
+            encoding='latin-1',
+            header=0,
+            names=columns_characters)
     else:
-        marvel_df = pd.read_csv(file, sep=",", header=0,encoding="utf-8",engine="python", names = columns)
-        
+        marvel_df = pd.read_csv(
+            file,
+            sep=",",
+            header=0,
+            encoding="utf-8",
+            engine="python",
+            names=columns)
+
     marvel_df.to_csv(file, index=False)
     print(marvel_df.head())
     print(marvel_df.shape)
     print("Returned rows:", len(marvel_df))
 
-#### PIPELINE ####
+# Pipeline execution
+
 
 def main():
 
@@ -178,13 +211,14 @@ def main():
 
     # Copy TSV files into container
     copy_tsv_to_container()
-    db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql", 
-                      "imdb-load-data.sql","imdb-add-constraints.sql",
+    db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
+                      "imdb-load-data.sql", "imdb-add-constraints.sql",
                       "imdb-add-index.sql"]
     #  Wait for MySQL to be ready
     wait_for_mysql(CONTAINER)
 
-    #  Execute SQL files to create DB, tables, load data, add constraints and indexes
+    # Execute SQL files to create DB, tables, load data, add constraints and
+    # indexes
     for sql in db_setup_files:
         execute_sql_file(SQL_DIR / sql)
 
@@ -192,11 +226,11 @@ def main():
     sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
     if not sql_files:
         raise FileNotFoundError("No SQL files found.")
-    
-    # Remove any existing CSV files in container before running queries that generate new ones
-    run_command([
-        DOCKER, "exec", CONTAINER,  "sh", "-c", "rm -f /var/lib/mysql-files/*.csv"]
-    )
+
+    # Remove any existing CSV files in container before running queries that
+    # generate new ones
+    run_command([DOCKER, "exec", CONTAINER, "sh", "-c",
+                "rm -f /var/lib/mysql-files/*.csv"])
     #  Execute each SQL file sequentially
     for sql_file in sql_files:
         execute_sql_file(sql_file)
