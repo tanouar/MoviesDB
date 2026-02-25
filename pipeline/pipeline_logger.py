@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
 
+
 def show_only_debug(record):
     return record.levelname == "DEBUG"
 
-def setup_logger(level=logging.DEBUG):
+
+def setup_logger(level=logging.INFO):
     log_dir = Path("pipeline")
     log_dir.mkdir(exist_ok=True)
 
@@ -24,7 +26,8 @@ def setup_logger(level=logging.DEBUG):
     # console_handler.addFilter(show_only_debug)
     logger.addHandler(console_handler)
 
-    file_handler = logging.FileHandler('pipeline/pipeline.log',mode='a',encoding='utf-8')
+    file_handler = logging.FileHandler(
+        'pipeline/pipeline.log', mode='a', encoding='utf-8')
     # file_handler.setLevel("DEBUG")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

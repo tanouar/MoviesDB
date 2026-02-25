@@ -8,6 +8,8 @@ import requests
 import gzip
 import logging
 from pipeline_logger import setup_logger
+import argparse
+
 
 logger = logging.getLogger("imdb_pipeline.run_pipeline")
 
@@ -28,12 +30,24 @@ if not MYSQL_PASSWORD:
         "Create a .env file in project root.\n"
         "See .env.example for required variables."
     )
-    raise RuntimeError("Missing required environment variable: MYSQL_ROOT_PASSWORD")
+    raise RuntimeError(
+        "Missing required environment variable: MYSQL_ROOT_PASSWORD")
 
 env = os.environ.copy()
 env["MYSQL_PWD"] = MYSQL_PASSWORD
 
 # functions
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run IMDb pipeline")
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Enable debug logging"
+    )
+    return parser.parse_args()
 
 
 def run_command(cmd, check=True):
@@ -73,7 +87,9 @@ def download_files():
         logger.info(target_path)
 
         if target_path.exists():
-            logger.info("File %s already exists. Skipping download.", target_path)
+            logger.info(
+                "File %s already exists. Skipping download.",
+                target_path)
         else:
             response = requests.get(url, stream=True)
 
@@ -86,12 +102,15 @@ def download_files():
 
         with gzip.open(target_path, 'rb') as gz_file:
             if tsv_path.exists():
-                logger.info("File %s already exists. Skipping extraction.", tsv_path)
+                logger.info(
+                    "File %s already exists. Skipping extraction.",
+                    tsv_path)
             else:
                 logger.info("Extracting file to %s", tsv_path)
                 with open(tsv_path, 'wb') as f:
                     f.write(gz_file.read())
                 logger.info("Extraction completed for %s", tsv_path)
+
 
 def copy_tsv_to_container():
     file_names = [
@@ -111,6 +130,7 @@ def copy_tsv_to_container():
                                 text=True,
                                 check=False)
         logger.debug(result.stderr)
+
 
 def execute_sql_file(sql_file):
     """Execute one SQL file inside container."""
@@ -197,7 +217,11 @@ def update_csv_file(file):
 
 
 def main():
-    logger = setup_logger()
+    args = parse_args()
+
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logger = setup_logger(level=log_level)
+
     # Start Docker container
     try:
         run_command([
