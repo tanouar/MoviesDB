@@ -216,3 +216,5 @@ data/**
 !data/**/.gitkeep
 
 .env
+
+.log
