@@ -212,8 +212,10 @@ def update_csv_file(file):
             header=0,
             names=columns_characters)
         marvel_df["character_name"] = marvel_df["character_name"]
-        marvel_df["character_name"] = marvel_df["character_name"].str.strip('[]"\'')  # remove [ ] " '
-        marvel_df["character_name"] = marvel_df["character_name"].str.strip()          # remove any remaining whitespace
+        marvel_df["character_name"] = marvel_df["character_name"].str.strip(
+            '[]"\'')  # remove [ ] " '
+        # remove any remaining whitespace
+        marvel_df["character_name"] = marvel_df["character_name"].str.strip()
     else:
         marvel_df = pd.read_csv(
             file,
@@ -237,7 +239,7 @@ def main():
     args = parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
-    logger = setup_logger(level=log_level)      
+    logger = setup_logger(level=log_level)
 
     # Start Docker container
     try:
@@ -259,8 +261,8 @@ def main():
         copy_tsv_to_container()
 
         db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
-                        "imdb-load-data.sql", "imdb-add-constraints.sql",
-                        "imdb-add-index.sql"]
+                          "imdb-load-data.sql", "imdb-add-constraints.sql",
+                          "imdb-add-index.sql"]
 
         # Execute SQL files to create DB, tables, load data, add constraints
         # and indexes
@@ -275,7 +277,7 @@ def main():
             logger.error("No SQL files found in %s", SQL_DIR)
             raise FileNotFoundError("No SQL files found.")
 
-        # Remove any existing CSV files in container before running queries that
+        # Remove any existing CSV files in container
         # generate new ones
         run_command([DOCKER, "exec", CONTAINER, "sh", "-c",
                     "rm -f /var/lib/mysql-files/*.csv"])
