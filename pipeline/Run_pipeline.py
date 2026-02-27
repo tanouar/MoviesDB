@@ -47,6 +47,18 @@ def parse_args():
         action="store_true",
         help="Enable debug logging"
     )
+    parser.add_argument(
+        "-db",
+        "--createdb",
+        action="store_true",
+        help="Create database and tables"
+    )
+    parser.add_argument(
+        "-csv",
+        "--createcsvs",
+        action="store_true",
+        help="Create CSV files"
+    )
     return parser.parse_args()
 
 
@@ -176,7 +188,7 @@ def cleanup():
 def update_csv_file(file):
     """Update a CSV file with new column names."""
     columns_movies = ["title_id", "primary_title", "genres", "start_year"]
-    columns_characters = ["character_name"]
+    columns_characters = ["character_name", "person_name", "person_id"]
     columns_directors = [
         "title_id",
         "person_id",
@@ -196,9 +208,12 @@ def update_csv_file(file):
     if "characters" in file.name:
         marvel_df = pd.read_csv(
             file,
-            encoding='latin-1',
+            encoding='utf-8',
             header=0,
             names=columns_characters)
+        marvel_df["character_name"] = marvel_df["character_name"]
+        marvel_df["character_name"] = marvel_df["character_name"].str.strip('[]"\'')  # remove [ ] " '
+        marvel_df["character_name"] = marvel_df["character_name"].str.strip()          # remove any remaining whitespace
     else:
         marvel_df = pd.read_csv(
             file,
@@ -209,6 +224,8 @@ def update_csv_file(file):
             names=columns)
 
     marvel_df.to_csv(file, index=False)
+    check_df = pd.read_csv(file)
+    logger.debug(check_df.head())
     logger.debug(marvel_df.head())
     logger.debug(marvel_df.shape)
     logger.info("Returned rows: %d", len(marvel_df))
@@ -220,7 +237,7 @@ def main():
     args = parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
-    logger = setup_logger(level=log_level)
+    logger = setup_logger(level=log_level)      
 
     # Start Docker container
     try:
@@ -233,40 +250,43 @@ def main():
     except Exception as e:
         logger.error(f"Error starting Docker container: {e}")
         return
+    if args.createdb:
+        logger.info("Creating database and tables...")
+        # Download files from IMDB
+        download_files()
 
-    # Download files from IMDB
-    download_files()
+        # Copy TSV files into container
+        copy_tsv_to_container()
 
-    # Copy TSV files into container
-    copy_tsv_to_container()
+        db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
+                        "imdb-load-data.sql", "imdb-add-constraints.sql",
+                        "imdb-add-index.sql"]
 
-    db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
-                      "imdb-load-data.sql", "imdb-add-constraints.sql",
-                      "imdb-add-index.sql"]
+        # Execute SQL files to create DB, tables, load data, add constraints
+        # and indexes
+        for sql in db_setup_files:
+            execute_sql_file(SQL_DIR / sql)
 
-    # Execute SQL files to create DB, tables, load data, add constraints
-    # and indexes
-    for sql in db_setup_files:
-        execute_sql_file(SQL_DIR / sql)
+    if args.createcsvs:
+        logger.info("Running SQL queries and creating CSV files...")
+        #  Get SQL files
+        sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
+        if not sql_files:
+            logger.error("No SQL files found in %s", SQL_DIR)
+            raise FileNotFoundError("No SQL files found.")
 
-    #  Get SQL files
-    sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
-    if not sql_files:
-        logger.error("No SQL files found in %s", SQL_DIR)
-        raise FileNotFoundError("No SQL files found.")
+        # Remove any existing CSV files in container before running queries that
+        # generate new ones
+        run_command([DOCKER, "exec", CONTAINER, "sh", "-c",
+                    "rm -f /var/lib/mysql-files/*.csv"])
+        #  Execute each SQL file sequentially
+        for sql_file in sql_files:
+            execute_sql_file(sql_file)
 
-    # Remove any existing CSV files in container before running queries that
-    # generate new ones
-    run_command([DOCKER, "exec", CONTAINER, "sh", "-c",
-                "rm -f /var/lib/mysql-files/*.csv"])
-    #  Execute each SQL file sequentially
-    for sql_file in sql_files:
-        execute_sql_file(sql_file)
+        logger.info("All SQL queries executed successfully.")
 
-    logger.info("All SQL queries executed successfully.")
-
-    for csv in DATA_DIR.glob("*marvel*.csv"):
-        update_csv_file(csv)
+        for csv in DATA_DIR.glob("*marvel*.csv"):
+            update_csv_file(csv)
 
     cleanup()
 

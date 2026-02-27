@@ -29,7 +29,9 @@ WITH
             AND t.start_year >= 2008 AND t.start_year <= 2026
     )
 SELECT DISTINCT
-    c.show_characters AS character_name
+    c.show_characters AS character_name,
+    p.person_name AS actor_name,
+    p.person_id AS person_id
 INTO OUTFILE '/var/lib/mysql-files/marvel_characters.csv' 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
@@ -38,6 +40,8 @@ LINES TERMINATED BY '\n'
 FROM titles AS t
     INNER JOIN crew AS c
     ON t.title_id = c.title_id
+    INNER JOIN people AS p
+    ON c.person_id = p.person_id
 WHERE
     t.title_id IN (
         SELECT title_id

@@ -174,5 +174,10 @@ MYSQL_USER=appuser
 MYSQL_PASSWORD=changeme
 
 ```
+## Logging 
+### Logging avec la lib logging et une structure try & except pour catché les erreurs + mise en place de 4 niveaux de logs : INFO, WARNING, ERROR, DEBUG
 
+### Le script prendre en argument -d pour activer le mode DEBUG, -db pour créer la base de donnée et -csv pour créer les csv
+
+ 
 
