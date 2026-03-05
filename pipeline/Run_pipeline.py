@@ -59,6 +59,12 @@ def parse_args():
         action="store_true",
         help="Create CSV files"
     )
+    parser.add_argument(
+        "-q",
+        "--runqueries",
+        action="store_true",
+        help="Run SQL queries"
+    )
     return parser.parse_args()
 
 
@@ -130,7 +136,8 @@ def copy_tsv_to_container():
         "title.basics.tsv",
         "title.episode.tsv",
         "title.principals.tsv",
-        "title.ratings.tsv"]
+        "title.ratings.tsv",
+        "marvel_films.csv"]
 
     for file in file_names:
         logger.info(f"Copying {file} into docker container")
@@ -171,12 +178,15 @@ def execute_sql_file(sql_file):
              "root",
              DB],
             stdin=f,
+            text=True
         )
 
     if result.returncode != 0:
+        logger.error(f"Error executing {sql_file.name}:\n{result.stderr}")
         raise RuntimeError(f"SQL execution failed for {sql_file.name}")
 
-    logger.info(f" Finished running {sql_file.name}")
+    else:
+        logger.info(f" Finished running {sql_file.name}")
 
 
 def cleanup():
@@ -187,43 +197,57 @@ def cleanup():
 
 def update_csv_file(file):
     """Update a CSV file with new column names."""
-    columns_movies = ["title_id", "primary_title", "genres", "start_year"]
-    columns_characters = ["character_name", "person_name", "person_id"]
-    columns_directors = [
+    columns_movies = [
         "title_id",
-        "person_id",
-        "person_name",
-        "job",
-        "category"]
-    columns_actors = ["person_id", "person_name"]
+        "primary_title",
+        "genres",
+        "start_year",
+        "runtime_minutes"]
+    columns_characters = ["character_name"]
+    columns_character_appears_in_movie = ["title_id", "character_name"]
+    columns_directors = [
+        "title_id", "person_id"]
+    columns_producers = [
+        "person_id", "title_id"]
+    columns_actors = ["person_id", "person_name", "born", "died"]
+    columns_person_plays_character = ["person_id", "character_name"]
 
-    if "movies" in file.name:
-        columns = columns_movies
-    elif "characters" in file.name:
-        columns = columns_characters
-    elif "directors" in file.name:
-        columns = columns_directors
-    elif "actors" in file.name:
-        columns = columns_actors
-    if "characters" in file.name:
-        marvel_df = pd.read_csv(
-            file,
-            encoding='utf-8',
-            header=0,
-            names=columns_characters)
-        marvel_df["character_name"] = marvel_df["character_name"]
-        marvel_df["character_name"] = marvel_df["character_name"].str.strip(
-            '[]"\'')  # remove [ ] " '
-        # remove any remaining whitespace
-        marvel_df["character_name"] = marvel_df["character_name"].str.strip()
-    else:
-        marvel_df = pd.read_csv(
-            file,
-            sep=",",
-            header=0,
-            encoding="utf-8",
-            engine="python",
-            names=columns)
+    COLUMN_MAP = {
+        "character_appears_in_movie": columns_character_appears_in_movie,
+        "person_plays_character": columns_person_plays_character,
+        "characters": columns_characters,
+        "movies": columns_movies,
+        "person_produces_movie": columns_producers,
+        "person_directs_movie": columns_directors,
+        "actors": columns_actors,
+    }
+    name = file.name.lower()
+
+    columns = None
+    for key, value in COLUMN_MAP.items():
+        if key in name:
+            columns = value
+            break
+
+    if columns is None:
+        raise ValueError(f"No column mapping found for file: {file.name}")
+
+    marvel_df = pd.read_csv(
+        file,
+        # on_bad_lines="skip",
+        sep=",",
+        header=None,
+        encoding="utf-8",
+        engine="python",
+        names=columns)
+    print(file.name, "shape after read:", marvel_df.shape)
+
+    # if "character_name" in marvel_df.columns:
+    #     print(marvel_df["character_name"].head())
+    #     marvel_df["character_name"] = marvel_df["character_name"].str.strip(
+    #         '[]"\'\\ ')  # remove [ ] " '
+    # remove any remaining whitespace
+    # marvel_df["character_name"] = marvel_df["character_name"].str.strip()
 
     marvel_df.to_csv(file, index=False)
     check_df = pd.read_csv(file)
@@ -237,6 +261,11 @@ def update_csv_file(file):
 
 def main():
     args = parse_args()
+
+    if not any([args.createdb, args.runqueries, args.createcsvs]):
+        args.createdb = True
+        args.runqueries = True
+        args.createcsvs = True
 
     log_level = logging.DEBUG if args.debug else logging.INFO
     logger = setup_logger(level=log_level)
@@ -260,16 +289,21 @@ def main():
         # Copy TSV files into container
         copy_tsv_to_container()
 
-        db_setup_files = ["imdb-create-db.sql", "imdb-create-tables.sql",
-                          "imdb-load-data.sql", "imdb-add-constraints.sql",
-                          "imdb-add-index.sql"]
+        db_setup_files = [
+            "imdb-create-db.sql",
+            "imdb-create-tables.sql",
+            "imdb-load-data.sql",
+            "imdb-add-constraints.sql",
+            "imdb-add-index.sql",
+            "create_movies_table.sql"
+        ]
 
         # Execute SQL files to create DB, tables, load data, add constraints
         # and indexes
         for sql in db_setup_files:
             execute_sql_file(SQL_DIR / sql)
 
-    if args.createcsvs:
+    if args.runqueries:
         logger.info("Running SQL queries and creating CSV files...")
         #  Get SQL files
         sql_files = sorted(SQL_DIR.glob("*marvel*.sql"))
@@ -287,6 +321,7 @@ def main():
 
         logger.info("All SQL queries executed successfully.")
 
+    if args.createcsvs:
         for csv in DATA_DIR.glob("*marvel*.csv"):
             update_csv_file(csv)
 

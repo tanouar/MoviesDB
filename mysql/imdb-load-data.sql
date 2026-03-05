@@ -103,3 +103,11 @@ SET
     born = NULLIF(@born, '\N'),
     died = NULLIF(@died, '\N')
 ;
+
+LOAD DATA LOCAL INFILE '/tmp/marvel_films.csv'
+INTO TABLE marvel_films
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(film, release_year);

@@ -1,15 +1,16 @@
+-- -- category is director or job has director in it, and show_characters is null (to exclude cases where the director also acted in the movie)
 -- WITH
 --     marvel_titles AS (
 --         SELECT title_id
 --         FROM titles AS t
 --         WHERE
 --             REGEXP_REPLACE(
---                 TRIM(LOWER(primary_title)),
+--                 LOWER(primary_title),
 --                 '[^a-z0-9 ]',
 --                 ''
 --             ) REGEXP '^(iron man|captain america|thor|the avengers|avengers|guardians of the galaxy|antman|hulk|black panther|doctor strange|captain marvel|spiderman|black widow|shangchi|wandavision|loki|hawkeye|moon knight|ms marvel|shehulk|eternals|deadpool|the marvels)([^a-z]|$)'
 --             AND REGEXP_REPLACE(
---                 TRIM(LOWER(primary_title)),
+--                 LOWER(primary_title),
 --                 '[^a-z0-9 ]',
 --                 ''
 --             ) NOT REGEXP '(lego|reassembled|swat|business|cut|raimi|fan|bus|premiere)'
@@ -26,45 +27,50 @@
 --             AND t.genres NOT LIKE '%Animation%'
 --             AND t.genres NOT LIKE '%Crime%'
 --             AND t.start_year IS NOT NULL
---             AND t.start_year >= 2008 AND t.start_year <= 2026
+--             AND t.start_year >= 2008
+--             AND t.start_year <= 2026
 --     )
--- SELECT DISTINCT
---     c.show_characters AS character_name,
---     p.person_name AS actor_name,
---     p.person_id AS person_id
--- INTO OUTFILE '/var/lib/mysql-files/marvel_characters.csv' 
--- FIELDS TERMINATED BY ',' 
--- ENCLOSED BY '"'
--- ESCAPED BY '"' 
--- LINES TERMINATED BY '\n'
--- FROM titles AS t
---     INNER JOIN crew AS c
---     ON t.title_id = c.title_id
---     INNER JOIN people AS p
---     ON c.person_id = p.person_id
+-- SELECT crew.title_id, people.person_id, people.person_name, crew.job, crew.category 
+-- INTO OUTFILE '/var/lib/mysql-files/marvel_directors.csv' 
+-- FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+-- FROM crew
+--     JOIN people ON crew.person_id = people.person_id
 -- WHERE
---     t.title_id IN (
+--     crew.title_id IN (
 --         SELECT title_id
 --         FROM marvel_titles
 --     )
---     AND c.show_characters IS NOT NULL
---     AND c.show_characters NOT LIKE '%Self%'
---     AND LOWER(c.category) != 'self'
---     AND c.category NOT LIKE 'archive_%'
--- ORDER BY c.show_characters;
+--     AND (
+--         LOWER(crew.job) LIKE '%director%'
+--         OR LOWER(crew.job) LIKE '%producer%'
+--     )
+--     AND (
+--         LOWER(crew.category) = 'director'
+--         OR LOWER(crew.category) = 'producer'
+--     )
+--     AND crew.show_characters IS NULL
 SELECT
-DISTINCT JSON_UNQUOTE(JSON_EXTRACT(c.show_characters, '$[0]')) AS character_name
+p.person_id, m.title_id
 INTO OUTFILE 
-    '/var/lib/mysql-files/marvel_characters.csv' 
+    '/var/lib/mysql-files/marvel_person_produces_movie.csv' 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n'
-FROM crew AS c
+FROM crew c
 INNER JOIN marvel_movies m
     ON c.title_id = m.title_id
+INNER JOIN people p
+    ON c.person_id = p.person_id
 WHERE
-     c.show_characters IS NOT NULL
-    AND c.show_characters NOT LIKE '%Self%'
-    AND LOWER(c.category) != 'self'
-    AND c.category NOT LIKE 'archive_%'
-ORDER BY character_name;
+    -- (
+    --     LOWER(c.job) LIKE '%director%'
+    --     OR LOWER(c.job) LIKE '%producer%'
+    --     OR LOWER(c.category) LIKE '%director%'
+    -- )
+    -- AND 
+    (
+        LOWER(c.category) = 'producer'
+        -- OR LOWER(c.category) = 'self'
+    )
+    AND c.show_characters IS NULL
+ORDER BY p.person_id;

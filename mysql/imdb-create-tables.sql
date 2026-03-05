@@ -83,3 +83,8 @@ CREATE TABLE crew (
   job       TEXT,
   show_characters VARCHAR(255)
 );
+
+CREATE TABLE marvel_films (
+  film VARCHAR(255) NOT NULL,
+  release_year INTEGER NOT NULL
+)
