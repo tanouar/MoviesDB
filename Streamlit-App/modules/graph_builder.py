@@ -73,13 +73,19 @@ def parse_style_grass(file_path):
             props[k] = clean_value(v)
         label_styles[label] = props
 
-    rel_blocks = re.findall(r'(relationship\s*\{.*?\})', content, re.DOTALL)
+    rel_blocks = re.findall(
+        r'(relationship(?:\.[A-Za-z0-9_]+)?\s*\{.*?\})',
+        content,
+        re.DOTALL
+    )
     for block in rel_blocks:
+        m = re.match(r'relationship(?:\.([A-Za-z0-9_]+))?\s*\{', block)
+        rel_type = m.group(1).upper() if m and m.group(1) else "relationship"
         props = {}
         prop_pattern = r'([A-Za-z0-9_-]+)\s*:\s*([^;]+);'
         for k, v in re.findall(prop_pattern, block):
             props[k] = clean_value(v)
-        label_styles["relationship"] = props
+        label_styles[rel_type] = props
 
     return label_styles
 
@@ -189,6 +195,10 @@ def build_pyvis_graph(nodes, relationships, height="600px",
 
     debug_list = []
 
+    # Mapper chaque element_id (string complexe) vers un entier simple
+    # pour éviter tout problème de vis.js avec les caractères spéciaux
+    id_map = {node["id"]: idx for idx, node in enumerate(nodes)}
+
     for node in nodes:
         raw_label_list = _extract_node_labels(node)
         raw_lower = [low.lower() for low in raw_label_list]
@@ -227,8 +237,10 @@ def build_pyvis_graph(nodes, relationships, height="600px",
             "#000000"
         )
 
-        # Taille (diameter) et bord
-        size = _to_int_px(style.get("diameter", None), fallback=40)
+        # Taille (size ou diameter) et bord
+        size = _to_int_px(
+            style.get("diameter", style.get("size", None)), fallback=25
+        )
         border_width = _to_int_px(style.get("border-width", None), fallback=2)
 
         # Caption : privilégier le champ 'name' ou template du .grass
@@ -267,7 +279,7 @@ def build_pyvis_graph(nodes, relationships, height="600px",
         title = "<br>".join(properties)
 
         net.add_node(
-            node["id"],
+            id_map[node["id"]],
             label=caption,
             title=title,
             color=color_arg,
@@ -283,6 +295,7 @@ def build_pyvis_graph(nodes, relationships, height="600px",
 
         debug_list.append({
             "id": node.get("id"),
+            "pyvis_id": id_map[node["id"]],
             "raw_labels": raw_label_list,
             "chosen_label": chosen_label,
             "caption": caption,
@@ -293,30 +306,42 @@ def build_pyvis_graph(nodes, relationships, height="600px",
         })
 
     # Relations
-    rel_style = label_styles.get("relationship", {})
-    rel_color = hex_to_rgba(rel_style.get("color", "#A5ABB6"))
-    rel_width = _to_int_px(rel_style.get("shaft-width", None), fallback=2)
-    rel_caption_template = rel_style.get("caption")
+    # Style global de fallback
+    default_rel_style = label_styles.get("relationship", {})
+    default_rel_color = hex_to_rgba(
+        default_rel_style.get("color", "#000000")
+    )
+    default_rel_width = _to_int_px(
+        default_rel_style.get("shaft-width", None), fallback=2
+    )
 
-    # Créer un set des IDs des nœuds ajoutés à Pyvis pour vérification
-    added_node_ids = set(net.get_nodes())
+    # Construire le set des IDs connus depuis la liste d'entrée
+    # (plus fiable que net.get_nodes() qui peut convertir les types)
+    known_node_ids = {node["id"] for node in nodes}
 
     for rel in relationships:
-        # Vérification de sécurité : les deux nœuds doivent exister
         source_id = rel["source"]
         target_id = rel["target"]
+        rel_type = rel.get("type", "")
 
-        if source_id not in added_node_ids or target_id not in added_node_ids:
-            # Ignorer cette relation si un des nœuds n'existe pas
+        if source_id not in known_node_ids or target_id not in known_node_ids:
             continue
 
-        caption = rel_caption_template or rel.get("type", "")
-        if isinstance(caption, str) and "<type>" in caption:
-            caption = caption.replace("<type>", rel.get("type", ""))
+        # Chercher le style spécifique du type de relation (ex: DIRECTED)
+        specific_style = label_styles.get(rel_type.upper(), {})
+        rel_color = hex_to_rgba(
+            specific_style.get("color", default_rel_color)
+        )
+        rel_width = _to_int_px(
+            specific_style.get("shaft-width",
+                               specific_style.get("width", None)),
+            fallback=default_rel_width
+        )
+
         net.add_edge(
-            source_id,
-            target_id,
-            label=caption,
+            id_map[source_id],
+            id_map[target_id],
+            label=rel_type,
             color=rel_color,
             width=rel_width
         )

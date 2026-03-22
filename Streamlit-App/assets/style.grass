@@ -1,80 +1,44 @@
-node {
-  diameter: 50px;
-  color: #A5ABB6;
-  border-color: #9AA1AC;
-  border-width: 2px;
-  text-color-internal: #FFFFFF;
-  font-size: 10px;
-}
-relationship {
-  color: #A5ABB6;
-  shaft-width: 1px;
-  font-size: 8px;
-  padding: 3px;
-  text-color-external: #000000;
-  text-color-internal: #FFFFFF;
-  caption: "<type>";
-}
 node.Person {
-  color: #C990C0;
-  border-color: #b261a5;
-  text-color-internal: #FFFFFF;
-  defaultCaption: "<id>";
-  caption: "{name}";
+  color: #abaa86;
+  size: 25px;
 }
+
 node.Actor {
-  color: #F79767;
-  border-color: #f36924;
-  text-color-internal: #FFFFFF;
-  defaultCaption: "<id>";
-  caption: "{name}";
+  color: #9bb273;
+  size: 25px;
 }
+
 node.Character {
-  color: #57C7E3;
-  border-color: #23b3d7;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{name}";
+  color: #00d6ff;
+  size: 25px;
 }
+
 node.Movie {
-  color: #F16667;
-  border-color: #eb2728;
-  text-color-internal: #FFFFFF;
-  defaultCaption: "<id>";
-  caption: "{name}";
+  color: #a6ff86;
+  size: 25px;
 }
-node.Category {
-  color: #D9C8AE;
-  border-color: #c0a378;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{name}";
+
+relationship.PLAY {
+  color: #000000;
+  width: 3px;
 }
-node.Product {
-  color: #8DCC93;
-  border-color: #5db665;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{name}";
+
+relationship.APPEARS_IN {
+  color: #000000;
+  width: 3px;
 }
-node.Supplier {
-  color: #ECB5C9;
-  border-color: #da7298;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{name}";
+
+relationship.APPEAR_IN {
+  color: #000000;
+  width: 3px;
 }
-node.Order {
-  color: #4C8EDA;
-  border-color: #2870c2;
-  text-color-internal: #FFFFFF;
-  defaultCaption: "<id>";
-  caption: "{name}";
+
+relationship.DIRECTED {
+  color: #000000;
+  width: 3px;
 }
-node.Customer {
-  color: #FFC454;
-  border-color: #d7a013;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{name}";
+
+relationship.PRODUCED {
+  color: #000000;
+  width: 3px;
 }

@@ -60,7 +60,7 @@ else:
 st.sidebar.markdown(f"**Nœuds récupérés :** {len(nodes)}")
 st.sidebar.markdown(f"**Relations récupérées :** {len(relationships)}")
 
-# Chemin absolu vers le fichier style.grass (fonctionne en local et sur Streamlit Cloud)
+# Chemin absolu vers le fichier style.grass
 STYLE_FILE = APP_DIR / "assets" / "style.grass"
 
 if nodes:

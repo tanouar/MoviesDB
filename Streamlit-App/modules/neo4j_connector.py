@@ -54,38 +54,11 @@ class Neo4jConnector:
         Returns:
             Tuple (nodes, relationships) contenant les données du graphe
         """
-        # Construire les filtres
-        label_filter_n = ""
-        label_filter_m = ""
-        if labels:
-            conditions = [f"'{cond}' IN labels(n)" for cond in labels]
-            label_filter_n = "(" + " OR ".join(conditions) + ")"
-            conditions_m = [f"'{cond}' IN labels(m)" for cond in labels]
-            label_filter_m = "(" + " OR ".join(conditions_m) + ")"
-
-        rel_filter = ""
-        if rel_types:
-            conditions = [f"type(r) = '{r_type}'" for r_type in rel_types]
-            rel_filter = "(" + " OR ".join(conditions) + ")"
-
-        # Construire la clause WHERE complète
-        where_parts = []
-        if label_filter_n:
-            where_parts.append(label_filter_n)
-        if label_filter_m:
-            where_parts.append(label_filter_m)
-        if rel_filter:
-            where_parts.append(rel_filter)
-
-        where_clause = ""
-        if where_parts:
-            where_clause = "WHERE " + " AND ".join(where_parts)
-
-        query = f"""
+        # Requête simple sans WHERE complexe — filtrage côté Python
+        query = """
         MATCH (n)-[r]->(m)
-        {where_clause}
         RETURN DISTINCT n, r, m
-        LIMIT 500
+        LIMIT 1000
         """
 
         nodes = {}
@@ -98,33 +71,56 @@ class Neo4jConnector:
                 m = record["m"]
                 r = record["r"]
 
-                # Ajouter le nœud source
-                if n and n.id not in nodes:
+                n_eid = n.element_id if n else None
+                m_eid = m.element_id if m else None
+
+                if n and n_eid not in nodes:
                     node_label = list(n.labels)[0] if n.labels else ""
-                    nodes[n.id] = {
-                        "id": n.id,
-                        "label": node_label,
-                        **dict(n.items())
+                    nodes[n_eid] = {
+                        **dict(n.items()),
+                        "id": n_eid,
+                        "label": node_label
                     }
-
-                # Ajouter le nœud cible
-                if m and m.id not in nodes:
+                if m and m_eid not in nodes:
                     node_label = list(m.labels)[0] if m.labels else ""
-                    nodes[m.id] = {
-                        "id": m.id,
-                        "label": node_label,
-                        **dict(m.items())
+                    nodes[m_eid] = {
+                        **dict(m.items()),
+                        "id": m_eid,
+                        "label": node_label
                     }
-
-                # Ajouter la relation
-                if r and n and m:
+                if r is not None and n_eid and m_eid:
                     relationships.append({
-                        "source": n.id,
-                        "target": m.id,
+                        "source": n_eid,
+                        "target": m_eid,
                         "type": r.type
                     })
 
-        return list(nodes.values()), relationships
+        # Filtrage côté Python par labels
+        if labels:
+            label_set = set(labels)
+            filtered_nodes = {
+                k: v for k, v in nodes.items()
+                if v.get("label") in label_set
+            }
+        else:
+            filtered_nodes = nodes
+
+        # Filtrage des relations (les deux nœuds doivent être présents)
+        filtered_rels = [
+            rel for rel in relationships
+            if rel["source"] in filtered_nodes
+            and rel["target"] in filtered_nodes
+        ]
+
+        # Filtrage par types de relations
+        if rel_types:
+            rel_type_set = set(rel_types)
+            filtered_rels = [
+                rel for rel in filtered_rels
+                if rel["type"] in rel_type_set
+            ]
+
+        return list(filtered_nodes.values()), filtered_rels
 
     def get_all_movies(self):
         """Récupère tous les films (nœuds Movie) avec leurs titres.
@@ -134,7 +130,7 @@ class Neo4jConnector:
         """
         query = """
         MATCH (m:Movie)
-        RETURN m.title as title, id(m) as id
+        RETURN m.title as title, elementId(m) as id
         ORDER BY m.title
         """
         with self.driver.session() as session:
@@ -157,11 +153,11 @@ class Neo4jConnector:
         """
         query = f"""
         MATCH path = (m:Movie)-[*1..{depth}]-(connected)
-        WHERE id(m) = $movie_id
+        WHERE elementId(m) = $movie_id
         UNWIND nodes(path) as node
         WITH collect(DISTINCT node) as allNodes
         UNWIND allNodes as n
-        RETURN DISTINCT n, id(n) as node_id
+        RETURN DISTINCT n
         """
 
         nodes = {}
@@ -173,11 +169,12 @@ class Neo4jConnector:
             for record in result:
                 n = record["n"]
                 if n:
+                    n_eid = n.element_id
                     node_label = list(n.labels)[0] if n.labels else ""
-                    nodes[n.id] = {
-                        "id": n.id,
-                        "label": node_label,
-                        **dict(n.items())
+                    nodes[n_eid] = {
+                        **dict(n.items()),
+                        "id": n_eid,
+                        "label": node_label
                     }
 
             # Récupérer les relations entre ces nœuds uniquement
@@ -185,9 +182,10 @@ class Neo4jConnector:
             if len(node_ids) > 0:
                 rel_query = """
                 MATCH (n)-[r]->(m)
-                WHERE id(n) IN $node_ids AND id(m) IN $node_ids
-                RETURN DISTINCT id(n) as source,
-                id(m) as target, type(r) as type
+                WHERE elementId(n) IN $node_ids
+                  AND elementId(m) IN $node_ids
+                RETURN DISTINCT elementId(n) as source,
+                elementId(m) as target, type(r) as type
                 """
                 result = session.run(rel_query, node_ids=node_ids)
                 for record in result:
