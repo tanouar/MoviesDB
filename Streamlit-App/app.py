@@ -1,5 +1,6 @@
 """Application Streamlit pour l'exploration de graphes Neo4j/AuraDB."""
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 import streamlit as st
 import streamlit.components.v1 as components
@@ -9,6 +10,9 @@ from modules.ui_helpers import sidebar_filters
 
 # Chargement des variables d'environnement depuis .env
 load_dotenv()
+
+# Obtenir le chemin absolu du dossier contenant app.py
+APP_DIR = Path(__file__).parent
 
 # ========================================
 # Configuration Neo4j/AuraDB
@@ -56,8 +60,8 @@ else:
 st.sidebar.markdown(f"**Nœuds récupérés :** {len(nodes)}")
 st.sidebar.markdown(f"**Relations récupérées :** {len(relationships)}")
 
-# Chemin vers le fichier style.grass exporté depuis Neo4j Browser
-STYLE_FILE = "assets/style.grass"
+# Chemin absolu vers le fichier style.grass (fonctionne en local et sur Streamlit Cloud)
+STYLE_FILE = APP_DIR / "assets" / "style.grass"
 
 if nodes:
     result = build_pyvis_graph(
