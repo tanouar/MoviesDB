@@ -1,0 +1,155 @@
+/* ============================================================
+   Avengers: Doomsday — Thème Streamlit
+   Palette : noir profond | rouge cramoisi | or/cuivre
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+
+/* ---------- Variables ---------- */
+:root {
+  --red:    #c0392b;
+  --red-glow: rgba(192, 57, 43, 0.55);
+  --gold:   #c9a84c;
+  --dark:   #0a0a0a;
+  --dark2:  #111111;
+  --dark3:  #1a1a1a;
+  --text:   #e8e8e8;
+  --muted:  #888888;
+}
+
+/* ---------- Fond général ---------- */
+.stApp {
+  background-color: var(--dark) !important;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(192, 57, 43, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(201, 168, 76, 0.05) 0%, transparent 60%);
+  color: var(--text) !important;
+  font-family: 'Rajdhani', sans-serif !important;
+}
+
+/* ---------- Titre principal ---------- */
+h1 {
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-size: 3rem !important;
+  color: var(--red) !important;
+  text-shadow:
+    0 0 12px var(--red-glow),
+    0 0 30px var(--red-glow);
+  letter-spacing: 4px !important;
+  text-transform: uppercase !important;
+}
+
+/* ---------- Sous-titres ---------- */
+h2, h3 {
+  font-family: 'Bebas Neue', sans-serif !important;
+  color: var(--gold) !important;
+  letter-spacing: 2px !important;
+}
+
+h4, h5, h6 {
+  color: var(--gold) !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* ---------- Sidebar ---------- */
+[data-testid="stSidebar"] {
+  background-color: var(--dark2) !important;
+  border-right: 2px solid var(--red) !important;
+  box-shadow: 4px 0 20px rgba(192, 57, 43, 0.2);
+}
+
+[data-testid="stSidebar"] * {
+  color: var(--text) !important;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+  color: var(--gold) !important;
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 2px !important;
+  text-shadow: none !important;
+}
+
+[data-testid="stSidebar"] hr {
+  border-color: var(--red) !important;
+  opacity: 0.4;
+}
+
+/* ---------- Boutons ---------- */
+.stButton > button {
+  background: transparent !important;
+  border: 1px solid var(--red) !important;
+  color: var(--red) !important;
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 2px !important;
+  font-size: 1rem !important;
+  transition: all 0.2s ease !important;
+  border-radius: 3px !important;
+}
+
+.stButton > button:hover {
+  background: var(--red) !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px var(--red-glow) !important;
+}
+
+/* ---------- Selectbox / Multiselect ---------- */
+[data-testid="stSelectbox"] > div,
+[data-testid="stMultiSelect"] > div {
+  background-color: var(--dark3) !important;
+  border: 1px solid #333 !important;
+  color: var(--text) !important;
+  border-radius: 3px !important;
+}
+
+[data-testid="stSelectbox"] > div:focus-within,
+[data-testid="stMultiSelect"] > div:focus-within {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 6px var(--red-glow) !important;
+}
+
+/* ---------- Labels des widgets ---------- */
+label, .stSelectbox label, .stMultiSelect label {
+  color: var(--muted) !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  font-size: 0.8rem !important;
+}
+
+/* ---------- Info / Warning boxes ---------- */
+[data-testid="stAlert"] {
+  background-color: var(--dark3) !important;
+  border-left: 4px solid var(--gold) !important;
+  border-radius: 3px !important;
+  color: var(--text) !important;
+}
+
+/* ---------- Séparateurs markdown ---------- */
+hr {
+  border-color: #2a2a2a !important;
+}
+
+/* ---------- Texte gras dans la sidebar ---------- */
+[data-testid="stSidebar"] strong {
+  color: var(--gold) !important;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--dark2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--red);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}

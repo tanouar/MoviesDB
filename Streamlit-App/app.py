@@ -21,8 +21,23 @@ NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASS = os.getenv("NEO4J_PASSWORD", "password")
 
-st.set_page_config(page_title="Neo4j Graph Explorer", layout="wide")
-st.title("🌐 Neo4j Graph Explorer - Interactive")
+st.set_page_config(page_title="Marvel Cinematic Universe Graph", layout="wide")
+
+# ========================================
+# Injection du thème CSS Avengers: Doomsday
+# ========================================
+_css = (APP_DIR/"assets"/"css"/"avengers.css").read_text(encoding="utf-8")
+st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
+
+st.title("Marvel Cinematic Universe")
+
+# ========================================
+# Compte à rebours — 16 décembre 2026 à 9h
+# ========================================
+_countdown_html = (
+    APP_DIR / "components" / "countdown.html"
+).read_text(encoding="utf-8")
+components.html(_countdown_html, height=130)
 
 # Connexion à Neo4j
 connector = Neo4jConnector(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
@@ -60,6 +75,24 @@ else:
 st.sidebar.markdown(f"**Nœuds récupérés :** {len(nodes)}")
 st.sidebar.markdown(f"**Relations récupérées :** {len(relationships)}")
 
+# ========================================
+# Section Auteur
+# ========================================
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 👤 Auteur")
+st.sidebar.markdown("**Tarik ANOUAR**")
+_tarik_badge = (
+    "[![LinkedIn](https://img.shields.io/badge/LinkedIn-Tarik%20ANOUAR"
+    "-blue?logo=linkedin)](https://www.linkedin.com/in/anouartarik)"
+)
+st.sidebar.markdown(_tarik_badge)
+st.sidebar.markdown("**Vaynee SUNGEELEE**")
+_vaynee_badge = (
+    "[![LinkedIn](https://img.shields.io/badge/LinkedIn-Vaynee%20SUNGEELEE"
+    "-blue?logo=linkedin)](https://www.linkedin.com/in/vaynee-sungeelee/)"
+)
+st.sidebar.markdown(_vaynee_badge)
+
 # Chemin absolu vers le fichier style.grass
 STYLE_FILE = APP_DIR / "assets" / "style.grass"
 
@@ -69,33 +102,9 @@ if nodes:
         relationships,
         height="750px",
         style_file=STYLE_FILE,
-        debug=True
+        debug=False
     )
-    # result est un dict avec 'html' et 'debug'
-    graph_html = result["html"]
-    debug_info = result["debug"]
-
-    # Affiche d'abord le debug (panneau repliable)
-    with st.expander("Debug styles par noeud (ouvrir pour voir)"):
-        st.write(
-            "Extrait des premiers nœuds et le style appliqué "
-            "(id, raw_labels, chosen_label, applied_style_color)"
-        )
-        # On affiche une version concise
-        # version robuste : utilise les clés présentes dans debug_info
-        short = []
-        for d in debug_info:
-            short.append({
-                "id": d.get("id"),
-                "raw_labels": d.get("raw_labels"),
-                "chosen_label": d.get("chosen_label"),
-                "color": d.get(
-                    "bg_color",
-                    d.get("applied_style_color", None)
-                ),
-                "caption": d.get("caption")
-            })
-        st.json(short)
+    graph_html = result
 
     # Affiche le graphe
     components.html(graph_html, height=750, scrolling=True)

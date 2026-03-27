@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #296218; }
+    #cd-wrap {
+      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      background: #296218;
+      border-radius: 12px;
+      padding: 16px 10px 12px;
+    }
+    #cd-wrap p {
+      color: #d4f5c2;
+      font-size: 12px;
+      margin: 0 0 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #cd-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .cd-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cd-val {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .cd-lbl {
+      font-size: 11px;
+      color: #a8e89c;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="cd-wrap">
+    <p>Compte &agrave; rebours Avengers Doomsday</p>
+    <div id="cd-row">
+      <div class="cd-box">
+        <span class="cd-val" id="cd-months">00</span>
+        <span class="cd-lbl">Mois</span>
+      </div>
+      <div class="cd-box">
+        <span class="cd-val" id="cd-days">00</span>
+        <span class="cd-lbl">Jours</span>
+      </div>
+      <div class="cd-box">
+        <span class="cd-val" id="cd-hours">00</span>
+        <span class="cd-lbl">Heures</span>
+      </div>
+      <div class="cd-box">
+        <span class="cd-val" id="cd-minutes">00</span>
+        <span class="cd-lbl">Minutes</span>
+      </div>
+      <div class="cd-box">
+        <span class="cd-val" id="cd-seconds">00</span>
+        <span class="cd-lbl">Secondes</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Le script est placé après le HTML : le DOM est garanti prêt
+    (function () {
+      var target = new Date(2026, 11, 16, 9, 0, 0); // 16 décembre 2026 à 9h
+
+      function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+      function tick() {
+        var now  = new Date();
+        var diff = target - now;
+
+        if (diff <= 0) {
+          document.getElementById('cd-wrap').innerHTML =
+            '<p style="color:#fff;font-size:22px;font-weight:700;margin:10px;">&#127881; C\'est arriv&#233; !</p>';
+          return;
+        }
+
+        var totalSec = Math.floor(diff / 1000);
+        var totalMin = Math.floor(totalSec / 60);
+        var totalHrs = Math.floor(totalMin / 60);
+        var totalDay = Math.floor(totalHrs / 24);
+
+        var months  = Math.floor(totalDay / 30);
+        var rDays   = totalDay % 30;
+        var hours   = totalHrs % 24;
+        var minutes = totalMin % 60;
+        var seconds = totalSec % 60;
+
+        document.getElementById('cd-months').innerHTML  = pad(months);
+        document.getElementById('cd-days').innerHTML    = pad(rDays);
+        document.getElementById('cd-hours').innerHTML   = pad(hours);
+        document.getElementById('cd-minutes').innerHTML = pad(minutes);
+        document.getElementById('cd-seconds').innerHTML = pad(seconds);
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>

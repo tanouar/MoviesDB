@@ -1,2 +1,5 @@
 [server]
 baseUrlPath = "Streamlit-App"
+
+[theme]
+base = "dark"
