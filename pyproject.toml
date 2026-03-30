@@ -1,0 +1,190 @@
+# ==============================================================================
+# pyproject.toml — Configuration unifiée du projet MoviesDB
+#
+# Ce fichier centralise :
+#   - Les métadonnées du projet (nom, auteurs, licence, version)
+#   - La configuration des outils de linting (pycodestyle, flake8, isort)
+#   - Les dépendances de développement
+#
+# Utilisation :
+#   pip install pycodestyle flake8 autopep8 isort   ← outils linting
+#   pycodestyle Streamlit-App/                       ← vérifier PEP8
+#   flake8 Streamlit-App/                            ← linting avancé
+#   isort Streamlit-App/                             ← trier les imports
+#   autopep8 --in-place --recursive Streamlit-App/  ← corriger PEP8 auto
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Métadonnées du projet
+# ------------------------------------------------------------------------------
+[project]
+name = "moviesdb"
+version = "1.0.0"
+description = "Exploration du Marvel Cinematic Universe via un graphe Neo4j et une interface Streamlit interactive."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.13"
+authors = [
+    { name = "Tarik ANOUAR", email = "" },
+    { name = "Vaynee SUNGEELEE", email = "" },
+]
+keywords = ["neo4j", "streamlit", "graph", "marvel", "mcu", "data"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+
+# Dépendances du pipeline de données (requirements.txt)
+dependencies = [
+    "geopandas>=0.14.2",
+    "pandas>=2.2.2",
+    "requests>=2.32.3",
+    "tqdm>=4.66.4",
+    "SQLAlchemy>=1.4.23",
+    "jupyter>=1.1.1",
+    "python-dotenv>=1.2.1",
+]
+
+# Dépendances optionnelles — application Streamlit
+[project.optional-dependencies]
+app = [
+    "streamlit>=1.28.0",
+    "neo4j>=5.14.0",
+    "pyvis>=0.3.2",
+    "networkx>=3.2.1",
+    "cdlib>=0.4.0",
+    "python-louvain>=0.16",
+    "leidenalg>=0.11.0",
+]
+# Dépendances optionnelles — outils de développement / linting
+dev = [
+    "pycodestyle>=2.11.0",
+    "flake8>=6.1.0",
+    "autopep8>=2.0.4",
+    "mccabe>=0.7.0",
+    "flake8-isort>=6.1.0",
+    "isort>=5.13.0",
+]
+
+# Lien vers le dépôt GitHub
+[project.urls]
+Homepage = "https://github.com/tanouar/MoviesDB"
+Repository = "https://github.com/tanouar/MoviesDB"
+Issues = "https://github.com/tanouar/MoviesDB/issues"
+
+# ------------------------------------------------------------------------------
+# Système de build (requis par PEP 517/518 même sans packaging)
+# ------------------------------------------------------------------------------
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+# ------------------------------------------------------------------------------
+# pycodestyle — vérification PEP8
+# Commande : pycodestyle Streamlit-App/
+# ------------------------------------------------------------------------------
+[tool.pycodestyle]
+max-line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    "data/",
+    "notebooks/",
+    "Streamlit-App/assets/",
+    "Streamlit-App/components/",
+]
+
+# ------------------------------------------------------------------------------
+# flake8 — linting avancé (erreurs logiques + PEP8)
+# Commande : flake8 Streamlit-App/
+# ------------------------------------------------------------------------------
+[tool.flake8]
+max-line-length = 100
+extend-ignore = [
+    "E203",  # Espaces avant ':' (compatible black)
+    "W503",  # Saut de ligne avant opérateur binaire
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    "data",
+    "notebooks",
+    "Streamlit-App/assets",
+    "Streamlit-App/components",
+]
+per-file-ignores = [
+    "pipeline/*.py:E501",  # Scripts pipeline — lignes longues tolérées
+]
+
+# ------------------------------------------------------------------------------
+# isort — tri automatique des imports
+# Commande : isort Streamlit-App/
+# Vérification seule : isort --check --diff Streamlit-App/
+# ------------------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 100
+known_third_party = [
+    "streamlit",
+    "neo4j",
+    "pyvis",
+    "networkx",
+    "cdlib",
+    "community",
+    "pandas",
+    "geopandas",
+    "sqlalchemy",
+    "dotenv",
+]
+known_first_party = ["modules"]
+skip = ["__pycache__", ".git", "data", "notebooks"]
+
+# ------------------------------------------------------------------------------
+# autopep8 — correction automatique PEP8
+# Commande : autopep8 --in-place --recursive Streamlit-App/
+# ------------------------------------------------------------------------------
+[tool.autopep8]
+max-line-length = 79
+aggressive = 1
+recursive = true
+in-place = true
+exclude = "data,notebooks,Streamlit-App/assets,Streamlit-App/components"
+
+# ------------------------------------------------------------------------------
+# pytest — configuration des tests unitaires
+# Commande : pytest tests/ -v
+# Avec couverture : pytest tests/ --cov=Streamlit-App/modules --cov-report=term
+# ------------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--tb=short --strict-markers"
+markers = [
+    "slow: tests lents (désactiver avec -m 'not slow')",
+    "integration: tests nécessitant une connexion externe",
+]
+
+# ------------------------------------------------------------------------------
+# coverage.py — rapport de couverture de code
+# Commande : pytest --cov=Streamlit-App/modules --cov-report=term-missing
+# ------------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["Streamlit-App/modules", "pipeline"]
+omit = [
+    "*/__pycache__/*",
+    "*/tests/*",
+    "Streamlit-App/app.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
