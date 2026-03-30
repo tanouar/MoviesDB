@@ -94,7 +94,8 @@ class TestSetupLogger:
         assert logging.FileHandler in types
 
     def test_idempotent_second_call(self):
-        """Appeler setup_logger deux fois ne doit pas dupliquer les handlers."""
+        """Appeler setup_logger deux fois ne doit pas
+        dupliquer les handlers."""
         setup_logger()
         logger = setup_logger()
         assert len(logger.handlers) == 2

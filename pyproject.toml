@@ -150,7 +150,7 @@ skip = ["__pycache__", ".git", "data", "notebooks"]
 # Commande : autopep8 --in-place --recursive Streamlit-App/
 # ------------------------------------------------------------------------------
 [tool.autopep8]
-max-line-length = 79
+max-line-length = 100
 aggressive = 1
 recursive = true
 in-place = true
