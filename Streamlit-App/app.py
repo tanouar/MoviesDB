@@ -40,15 +40,65 @@ _countdown_html = (
 ).read_text(encoding="utf-8")
 components.html(_countdown_html, height=130)
 
-# Connexion à Neo4j
+# ========================================
+# Connexion Neo4j + wrappers cachés
+# ========================================
 connector = Neo4jConnector(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
 
+
+@st.cache_data(ttl=300)
+def cached_get_labels():
+    return connector.get_all_labels()
+
+
+@st.cache_data(ttl=300)
+def cached_get_rel_types():
+    return connector.get_all_relation_types()
+
+
+@st.cache_data(ttl=300)
+def cached_get_movies():
+    return connector.get_all_movies()
+
+
+@st.cache_data(ttl=120)
+def cached_get_graph(labels, rel_types):
+    return connector.get_graph(labels=list(labels), rel_types=list(rel_types))
+
+
+@st.cache_data(ttl=120)
+def cached_get_movie_graph(movie_id):
+    return connector.get_movie_graph(movie_id)
+
+
+@st.cache_data
+def cached_analyze_graph(nodes, relationships, method):
+    return analyze_graph(nodes, relationships, community_method=method)
+
+
+@st.cache_data
+def cached_build_graph(
+    nodes, relationships, style_file,
+    bc_scores, communities, bc_threshold
+):
+    return build_pyvis_graph(
+        nodes,
+        relationships,
+        height="750px",
+        style_file=style_file,
+        debug=False,
+        bc_scores=bc_scores,
+        communities=communities,
+        bc_threshold=bc_threshold,
+    )
+
+
 # Récupération dynamique des labels et types de relations
-all_labels = connector.get_all_labels()
-all_rel_types = connector.get_all_relation_types()
+all_labels = cached_get_labels()
+all_rel_types = cached_get_rel_types()
 
 # Récupération de la liste des films
-all_movies = connector.get_all_movies()
+all_movies = cached_get_movies()
 
 # Sidebar : filtres
 selected_labels, selected_rels, selected_movie_id = sidebar_filters(
@@ -59,18 +109,17 @@ selected_labels, selected_rels, selected_movie_id = sidebar_filters(
 
 # Bouton pour rafraîchir le graphe
 if st.sidebar.button("🔄 Rafraîchir le graphe"):
-    st.rerun()  # ⚡ Remplace st.experimental_rerun
+    st.cache_data.clear()
+    st.rerun()
 
 # Récupération des nœuds et relations filtrés
 if selected_movie_id is not None:
-    # Si un film est sélectionné, afficher son graphe
-    nodes, relationships = connector.get_movie_graph(selected_movie_id)
-    st.sidebar.info(f"🎬 Affichage du graphe autour du film sélectionné")
+    nodes, relationships = cached_get_movie_graph(selected_movie_id)
+    st.sidebar.info("🎬 Affichage du graphe autour du film sélectionné")
 else:
-    # Sinon, afficher le graphe avec les filtres standards
-    nodes, relationships = connector.get_graph(
-        labels=selected_labels,
-        rel_types=selected_rels
+    nodes, relationships = cached_get_graph(
+        tuple(selected_labels),
+        tuple(selected_rels)
     )
 
 st.sidebar.markdown(f"**Nœuds récupérés :** {len(nodes)}")
@@ -127,24 +176,16 @@ if nodes:
     communities = None
     analysis = None
     if enable_analysis:
-        analysis = analyze_graph(
-                nodes, relationships,
-                community_method=community_method
-            )
+        analysis = cached_analyze_graph(
+            nodes, relationships, community_method
+        )
         bc_scores = analysis["bc"]
         communities = analysis["communities"]
 
-    result = build_pyvis_graph(
-        nodes,
-        relationships,
-        height="750px",
-        style_file=STYLE_FILE,
-        debug=False,
-        bc_scores=bc_scores,
-        communities=communities,
-        bc_threshold=bc_threshold,
+    graph_html = cached_build_graph(
+        nodes, relationships, str(STYLE_FILE),
+        bc_scores, communities, bc_threshold,
     )
-    graph_html = result
 
     # --- Tableau Top-N nœuds ponts ---
     if enable_analysis and analysis:
