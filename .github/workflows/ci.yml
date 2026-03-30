@@ -2,7 +2,7 @@ name: CI — Lint & Tests
 
 on:
   push:
-    branches: ["main", "features/*", "fix/*"]
+    branches: ["main", "features", "features/*", "fix/*"]
   pull_request:
     branches: ["main"]
 
