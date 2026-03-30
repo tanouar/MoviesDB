@@ -27,8 +27,8 @@ def setup_logger(level=logging.INFO):
     # console_handler.addFilter(show_only_debug)
     logger.addHandler(console_handler)
 
-    log_file = f"pipeline/pipeline{time.strftime('%Y-%m-%d_%H-%M')}.log"
-    file_handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
+    log_file = "pipeline/pipeline.log"
+    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
     # file_handler.setLevel("DEBUG")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
