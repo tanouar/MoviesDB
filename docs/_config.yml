@@ -1,0 +1,10 @@
+title: MoviesDB
+description: Documentation du projet Marvel Cinematic Universe Graph
+theme: minima
+
+# Navigation
+header_pages:
+  - index.md
+  - documentation.md
+  - neo4j-scripts-guide.md
+  - Utilisation-script-run_pipeline.md

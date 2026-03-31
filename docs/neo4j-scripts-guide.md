@@ -1,3 +1,9 @@
+---
+title: Guide des scripts Neo4j
+layout: default
+nav_order: 2
+---
+
 # Scripts Neo4j - Guide d'utilisation
 
 ## Scripts disponibles

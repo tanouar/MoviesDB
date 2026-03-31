@@ -1,3 +1,8 @@
+---
+title: Documentation du projet
+layout: default
+nav_order: 1
+---
 # Mise en place de l’environnement
 
 ## Installation des dépendances (`requirements.txt`)
@@ -179,5 +184,108 @@ MYSQL_PASSWORD=changeme
 
 ### Le script prendre en argument -d pour activer le mode DEBUG, -db pour créer la base de donnée et -csv pour créer les csv
 
- 
+---
+
+# Application Streamlit — Exploration du graphe MCU
+
+L'application Streamlit permet d'explorer interactivement le graphe Marvel Cinematic Universe stocké dans Neo4j ou AuraDB.
+
+## Prérequis
+
+- Neo4j local (Docker) ou AuraDB opérationnel avec les données chargées
+- Python 3.10+
+- Variables d'environnement configurées (fichier `.env` dans `Streamlit-App/`)
+
+## Configuration
+
+Créer un fichier `.env` dans le dossier `Streamlit-App/` :
+
+```env
+NEO4J_URI=bolt://localhost:7687        # ou neo4j+s://xxxx.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=votre-mot-de-passe
+```
+
+## Installation et lancement
+
+```bash
+cd Streamlit-App
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+L'application s'ouvre automatiquement sur `http://localhost:8501`.
+
+## Fonctionnalités
+
+### Graphe interactif
+
+- Visualisation des nœuds et relations du graphe MCU via **PyVis**
+- Thème visuel **Avengers: Doomsday** (CSS personnalisé)
+- Compte à rebours jusqu'à la sortie du film (16 décembre 2026)
+
+### Filtres (barre latérale)
+
+| Filtre | Description |
+|--------|-------------|
+| **Labels** | Sélectionner les types de nœuds à afficher (`Person`, `Movie`, `Character`) |
+| **Types de relations** | Filtrer les relations (`PLAY`, `APPEAR_IN`, `DIRECTED`, `PRODUCED`) |
+| **Film** | Afficher le sous-graphe centré sur un film spécifique |
+| **Rafraîchir** | Vider le cache et recharger les données depuis Neo4j |
+
+### Mode Analyse topologique
+
+Activé via le toggle **"Mode Analyse (Betweenness Centrality)"** dans la sidebar.
+
+#### Betweenness Centrality (BC)
+
+- Calcule l'importance de chaque nœud comme pont dans le réseau
+- Les nœuds dépassant le **seuil BC** sont mis en évidence en vert (`#296218`)
+- Paramètre **Seuil BC minimum** (0.0 → 1.0, pas 0.01)
+- Paramètre **Top N nœuds ponts** (3 → 30)
+
+#### Détection de communautés
+
+Sélection de l'algorithme via le sélecteur :
+
+| Algorithme | Description |
+|-----------|-------------|
+| **Louvain** | Optimisation de la modularité (recommandé) |
+| **Greedy Modularity** | Fusion gloutonne de communautés |
+| **Label Propagation** | Propagation d'étiquettes (rapide) |
+| **Girvan-Newman** | Suppression d'arêtes (lent sur grands graphes) |
+
+Les communautés sont colorées automatiquement dans le graphe.
+
+#### Tableau Top-N nœuds ponts
+
+Affiché sous le graphe en mode Analyse — liste les nœuds les plus centraux avec leur score BC.
+
+### Cache
+
+Toutes les requêtes Neo4j sont mises en cache via `st.cache_data` :
+- Labels et types de relations : TTL 300 secondes
+- Films : TTL 300 secondes
+- Graphe filtré : TTL 120 secondes
+- Analyse topologique : cache permanent jusqu'au rafraîchissement
+
+## Structure du code
+
+```text
+Streamlit-App/
+├── app.py                  # Point d'entrée principal
+├── requirements.txt        # Dépendances Python
+├── config.toml             # Configuration du thème Streamlit
+├── assets/
+│   ├── css/avengers.css    # Thème visuel
+│   ├── style.grass         # Style Neo4j Browser
+│   └── components/
+│       └── countdown.html  # Compte à rebours HTML/JS
+└── modules/
+    ├── neo4j_connector.py  # Connexion et requêtes Neo4j
+    ├── graph_builder.py    # Construction du graphe PyVis
+    ├── graph_analyzer.py   # Analyse topologique (BC, communautés)
+    └── ui_helpers.py       # Composants UI (sidebar)
+```
+
 
