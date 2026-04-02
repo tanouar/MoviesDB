@@ -3,8 +3,16 @@ name: CI — Lint & Tests
 on:
   push:
     branches: ["main", "features", "features/*", "fix/*"]
+    paths:
+      - "**.py"
+      - "requirements*.txt"
+      - ".pycodestyle"
   pull_request:
     branches: ["main"]
+    paths:
+      - "**.py"
+      - "requirements*.txt"
+      - ".pycodestyle"
 
 jobs:
   lint-and-test:
@@ -48,22 +56,18 @@ jobs:
         run: pip install pytest pytest-cov
 
       # ------------------------------------------------------------------
-      # 4. Linting PEP8 — pycodestyle
+      # 4. Linting PEP8 — pycodestyle (tout le repo)
       # ------------------------------------------------------------------
-      - name: Vérification PEP8 (pycodestyle) — pipeline/
-        run: pycodestyle pipeline/
-
-      - name: Vérification PEP8 (pycodestyle) — Streamlit-App/modules/
-        run: pycodestyle Streamlit-App/modules/
-
-      - name: Vérification PEP8 (pycodestyle) — Streamlit-App/app.py
-        run: pycodestyle Streamlit-App/app.py
+      - name: Vérification PEP8 (pycodestyle) — tout le repo
+        run: python tests/check_pep8.py
 
       # ------------------------------------------------------------------
       # 5. Erreurs logiques — flake8 (syntaxe, imports non définis)
       # ------------------------------------------------------------------
-      - name: Vérification erreurs logiques (flake8) — Streamlit-App/modules/
-        run: flake8 Streamlit-App/modules/ --select=E9,F63,F7,F82 --show-source
+      - name: Vérification erreurs logiques (flake8) — tout le repo
+        run: |
+          flake8 . --select=E9,F63,F7,F82 --show-source \
+            --exclude=.git,__pycache__,venv,.venv,build,dist,.eggs
 
       # ------------------------------------------------------------------
       # 6. Tests unitaires — pytest
