@@ -16,6 +16,7 @@ Bienvenue sur la documentation du projet **MoviesDB**, une application d'explora
 | [Guide Neo4j](neo4j-scripts-guide) | Scripts de chargement, modèle de données, résolution d'erreurs |
 | [Script run_pipeline.py](Utilisation-script-run_pipeline) | Pipeline ETL complet : arguments, étapes, fichiers de sortie, dépannage |
 | [Schéma IMDb](imdb-schema) | Diagramme relationnel et description des tables de la base MySQL |
+| [Workflows CI/CD](workflow) | Workflows GitHub Actions : CI (lint, tests), CD (keep-alive Streamlit, déploiement docs) |
 
 ## Architecture du projet
 

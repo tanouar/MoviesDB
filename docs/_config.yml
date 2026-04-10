@@ -11,3 +11,4 @@ header_pages:
   - neo4j-scripts-guide.md
   - Utilisation-script-run_pipeline.md
   - imdb-schema.md
+  - workflow.md

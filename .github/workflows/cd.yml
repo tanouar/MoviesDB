@@ -1,0 +1,29 @@
+name: CD — Keep-Alive Streamlit App
+
+on:
+  schedule:
+    # Ping quotidien à 9h00 UTC — Streamlit Community Cloud endort les apps
+    # après 7 jours d'inactivité ; un ping par jour est largement suffisant.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-streamlit:
+    name: Ping Streamlit App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Envoyer une requête HTTP à l'application Streamlit
+        run: |
+          echo "Ping de https://amazing-mcu-graph.streamlit.app/ ..."
+          HTTP_STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 10 \
+            https://amazing-mcu-graph.streamlit.app/)
+          echo "Code HTTP reçu : $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 400 ]; then
+            echo "Échec : l'application a retourné le code $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Succès : l'application est active."
