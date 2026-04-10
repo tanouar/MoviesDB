@@ -101,11 +101,11 @@ Le pipeline se déroule en trois grandes phases, chacune contrôlable via les ar
 3. **Extraction des fichiers `.gz`** en fichiers `.tsv`
 4. **Copie des fichiers TSV** dans le conteneur Docker
 5. **Exécution des scripts SQL** de configuration (dans l'ordre) :
-   - `imdb-create-db.sql` — création de la base de données
-   - `imdb-create-tables.sql` — création des tables
-   - `imdb-load-data.sql` — chargement des données TSV
-   - `imdb-add-constraints.sql` — ajout des contraintes
-   - `imdb-add-index.sql` — création des index
+   - `imdb_create_db.sql` — création de la base de données
+   - `imdb_create_tables.sql` — création des tables
+   - `imdb_load_data.sql` — chargement des données TSV
+   - `imdb_add_constraints.sql` — ajout des contraintes
+   - `imdb_add_index.sql` — création des index
    - `create_movies_table.sql` — table additionnelle des films
 
 > Les fichiers déjà téléchargés ou extraits sont automatiquement ignorés pour éviter les téléchargements inutiles.

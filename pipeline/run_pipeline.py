@@ -208,18 +208,18 @@ def update_csv_file(file):
     columns_character_appears_in_movie = ["title_id", "character_name"]
     columns_directors = [
         "title_id", "person_id"]
-    columns_producers = [
-        "person_id", "title_id"]
+    # columns_producers = [
+    #     "title_id", "person_id"]
     columns_actors = ["person_id", "person_name", "born", "died"]
     columns_person_plays_character = ["person_id", "character_name"]
     COLUMN_MAP = {
         "character_appears_in_movie": columns_character_appears_in_movie,
         "person_plays_character": columns_person_plays_character,
-        "person_produces_movie": columns_producers,
+        "person_produces_movie": columns_directors,
         "person_directs_movie": columns_directors,
         "characters": columns_characters,
         "movies": columns_movies,
-        "actors": columns_actors,
+        "actors": columns_actors
     }
     name = file.name.lower()
 
