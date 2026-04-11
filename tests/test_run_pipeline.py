@@ -297,11 +297,11 @@ class TestUpdateCsvFile:
     def test_person_produces_movie_columns(self, tmp_path):
         path = self._write_raw_csv(
             tmp_path, "marvel_person_produces_movie.csv",
-            [["nm001", "tt001"]]
+            [["tt001", "nm001"]]
         )
         run_pipeline.update_csv_file(path)
         result = pd.read_csv(path)
-        assert list(result.columns) == ["person_id", "title_id"]
+        assert list(result.columns) == ["title_id", "person_id"]
 
     def test_person_directs_movie_columns(self, tmp_path):
         path = self._write_raw_csv(

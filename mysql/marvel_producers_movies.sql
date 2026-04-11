@@ -50,7 +50,7 @@
 --     )
 --     AND crew.show_characters IS NULL
 SELECT
-p.person_id, m.title_id
+m.title_id, p.person_id
 INTO OUTFILE 
     '/var/lib/mysql-files/marvel_person_produces_movie.csv' 
 FIELDS TERMINATED BY ',' 
