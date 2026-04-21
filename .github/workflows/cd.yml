@@ -2,28 +2,56 @@ name: CD — Keep-Alive Streamlit App
 
 on:
   schedule:
-    # Ping quotidien à 9h00 UTC — Streamlit Community Cloud endort les apps
-    # après 7 jours d'inactivité ; un ping par jour est largement suffisant.
+    # Visite quotidienne à 9h00 UTC — Streamlit Community Cloud endort les apps
+    # après 7 jours d'inactivité ; une vraie session navigateur par jour suffit.
     - cron: "0 9 * * *"
   workflow_dispatch:
 
 jobs:
   ping-streamlit:
-    name: Ping Streamlit App
+    name: Ping Streamlit App (Playwright)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Envoyer une requête HTTP à l'application Streamlit
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer Playwright et Chromium
         run: |
-          echo "Ping de https://amazing-mcu-graph.streamlit.app/ ..."
-          HTTP_STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" \
-            --max-time 30 \
-            --retry 3 \
-            --retry-delay 10 \
-            https://amazing-mcu-graph.streamlit.app/)
-          echo "Code HTTP reçu : $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 400 ]; then
-            echo "Échec : l'application a retourné le code $HTTP_STATUS"
-            exit 1
-          fi
-          echo "Succès : l'application est active."
+          npm install -g playwright
+          npx playwright install --with-deps chromium
+
+      - name: Visiter l'application Streamlit avec un vrai navigateur
+        run: |
+          cat > /tmp/keepalive.js << 'EOF'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+            try {
+              console.log('Navigation vers https://mcugraph.streamlit.app/ ...');
+              await page.goto('https://mcugraph.streamlit.app/', {
+                waitUntil: 'networkidle',
+                timeout: 120000,
+              });
+
+              // Attendre que le spinner de chargement Streamlit disparaisse
+              await page.waitForSelector('[data-testid="stSpinner"]', {
+                state: 'hidden',
+                timeout: 120000,
+              }).catch(() => console.log('Pas de spinner détecté (app déjà active).'));
+
+              // Vérifier que le conteneur principal est bien rendu
+              const appVisible = await page.locator('[data-testid="stApp"]').isVisible();
+              if (!appVisible) throw new Error('stApp non visible — application non chargée.');
+
+              console.log('Succès : session WebSocket établie, application active.');
+            } finally {
+              await browser.close();
+            }
+          })();
+          EOF
+          node /tmp/keepalive.js
