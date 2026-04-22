@@ -37,13 +37,18 @@ jobs:
                 timeout: 120000,
               });
 
+              // Attendre que le spinner de chargement Streamlit disparaisse
               await page.waitForSelector('[data-testid="stSpinner"]', {
                 state: 'hidden',
                 timeout: 120000,
               }).catch(() => console.log('Pas de spinner détecté (app déjà active).'));
 
-              const appVisible = await page.locator('[data-testid="stApp"]').isVisible();
-              if (!appVisible) throw new Error('stApp non visible — application non chargée.');
+              // Attendre activement que stApp soit visible (au lieu de juste vérifier)
+              console.log('Attente du rendu de stApp...');
+              await page.waitForSelector('[data-testid="stApp"]', {
+                state: 'visible',
+                timeout: 120000,
+              });
 
               console.log('Succès : session WebSocket établie, application active.');
             } finally {
