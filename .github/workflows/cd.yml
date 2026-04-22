@@ -2,8 +2,6 @@ name: CD — Keep-Alive Streamlit App
 
 on:
   schedule:
-    # Visite quotidienne à 9h00 UTC — Streamlit Community Cloud endort les apps
-    # après 7 jours d'inactivité ; une vraie session navigateur par jour suffit.
     - cron: "0 9 * * *"
   workflow_dispatch:
 
@@ -20,12 +18,13 @@ jobs:
 
       - name: Installer Playwright et Chromium
         run: |
-          npm install -g playwright
+          mkdir -p /tmp/pw && cd /tmp/pw
+          npm install playwright
           npx playwright install --with-deps chromium
 
       - name: Visiter l'application Streamlit avec un vrai navigateur
         run: |
-          cat > /tmp/keepalive.js << 'EOF'
+          cat > /tmp/pw/keepalive.js << 'EOF'
           const { chromium } = require('playwright');
 
           (async () => {
@@ -38,13 +37,11 @@ jobs:
                 timeout: 120000,
               });
 
-              // Attendre que le spinner de chargement Streamlit disparaisse
               await page.waitForSelector('[data-testid="stSpinner"]', {
                 state: 'hidden',
                 timeout: 120000,
               }).catch(() => console.log('Pas de spinner détecté (app déjà active).'));
 
-              // Vérifier que le conteneur principal est bien rendu
               const appVisible = await page.locator('[data-testid="stApp"]').isVisible();
               if (!appVisible) throw new Error('stApp non visible — application non chargée.');
 
@@ -54,4 +51,4 @@ jobs:
             }
           })();
           EOF
-          node /tmp/keepalive.js
+          node /tmp/pw/keepalive.js
