@@ -28,8 +28,9 @@ jobs:
           from selenium.webdriver.support import expected_conditions as EC
           from webdriver_manager.chrome import ChromeDriverManager
 
-          URL     = "https://mcugraph.streamlit.app/"
-          TIMEOUT = 120  # secondes max pour chaque attente
+          URL             = "https://mcugraph.streamlit.app/"
+          TIMEOUT_WAKE    = 20   # délai max pour détecter l'écran de veille
+          TIMEOUT_LOAD    = 180  # délai max pour le démarrage complet (cold start)
 
           opts = Options()
           opts.add_argument("--headless=new")
@@ -42,32 +43,60 @@ jobs:
               service=Service(ChromeDriverManager().install()),
               options=opts,
           )
-          wait = WebDriverWait(driver, TIMEOUT)
 
           try:
-              # ── 1. Chargement de l'application ────────────────────────
+              # ── 1. Chargement de la page ───────────────────────────────
               print(f"Navigation vers {URL} ...")
               driver.get(URL)
+              time.sleep(3)
+              print(f"URL : {driver.current_url} | Titre : {driver.title}")
 
-              wait.until(EC.presence_of_element_located(
-                  (By.CSS_SELECTOR, '[data-testid="stApp"]')
-              ))
-              print("stApp visible.")
+              # ── 2. Gérer l'écran de veille Streamlit ──────────────────
+              # Quand l'app dort, Streamlit affiche un bouton
+              # "Yes, get this app back up!" avant de démarrer.
+              try:
+                  wakeup_btn = WebDriverWait(driver, TIMEOUT_WAKE).until(
+                      EC.element_to_be_clickable((
+                          By.XPATH,
+                          '//button[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'
+                          '"abcdefghijklmnopqrstuvwxyz"), "get this app back up")]'
+                      ))
+                  )
+                  print("Écran de veille détecté — clic sur le bouton de réveil...")
+                  wakeup_btn.click()
+                  time.sleep(5)
+              except Exception:
+                  print("Pas d'écran de veille — application déjà active.")
 
-              # ── 2. Attendre la fin du spinner initial ─────────────────
+              # ── 3. Attendre que l'application soit pleinement chargée ──
+              wait = WebDriverWait(driver, TIMEOUT_LOAD)
+              try:
+                  wait.until(EC.presence_of_element_located(
+                      (By.CSS_SELECTOR, '[data-testid="stApp"]')
+                  ))
+                  print("stApp visible.")
+              except Exception:
+                  # Capture d'écran pour aider au débogage
+                  driver.save_screenshot("/tmp/selenium_timeout.png")
+                  print(f"ERREUR — stApp introuvable après {TIMEOUT_LOAD}s.")
+                  print(f"URL : {driver.current_url}")
+                  print(f"Titre : {driver.title}")
+                  print("Source (500 premiers caractères) :")
+                  print(driver.page_source[:500])
+                  raise
+
+              # ── 4. Attendre la fin du spinner initial ──────────────────
               try:
                   wait.until(EC.invisibility_of_element_located(
                       (By.CSS_SELECTOR, '[data-testid="stSpinner"]')
                   ))
                   print("Chargement initial terminé.")
               except Exception:
-                  print("Pas de spinner détecté — application déjà active.")
+                  print("Pas de spinner — application déjà prête.")
 
               time.sleep(5)  # stabilisation
 
-              # ── 3. Ouvrir le selectbox "Choisissez un film" ───────────
-              # Streamlit rend chaque selectbox avec data-testid="stSelectbox"
-              # Le premier dans la sidebar correspond à la sélection du film.
+              # ── 5. Ouvrir le selectbox "Choisissez un film" ────────────
               selectbox = wait.until(EC.element_to_be_clickable(
                   (By.CSS_SELECTOR, '[data-testid="stSelectbox"]')
               ))
@@ -75,9 +104,7 @@ jobs:
               print("Selectbox ouvert.")
               time.sleep(1)
 
-              # ── 4. Sélectionner le premier film de la liste ───────────
-              # Les options Streamlit sont des <li role="option">
-              # L'index 0 est "-- Tous les films --", on prend l'index 1.
+              # ── 6. Sélectionner le premier vrai film (index 1) ─────────
               options = wait.until(EC.presence_of_all_elements_located(
                   (By.CSS_SELECTOR, 'li[role="option"]')
               ))
@@ -88,7 +115,7 @@ jobs:
               target.click()
               print(f"Film sélectionné : «{film_name}»")
 
-              # ── 5. Attendre que le graphe se recharge ─────────────────
+              # ── 7. Attendre que le graphe se recharge ──────────────────
               time.sleep(8)
               try:
                   wait.until(EC.invisibility_of_element_located(
@@ -98,7 +125,7 @@ jobs:
               except Exception:
                   print("Graphe prêt (pas de spinner secondaire).")
 
-              # ── 6. Maintenir la session active ≥ 1 minute ─────────────
+              # ── 8. Maintenir la session active ≥ 1 minute ─────────────
               # 6 cycles × 10 s = 60 s d'activité réelle (scroll alterné)
               print("Simulation d'activité sur le graphe (≥ 1 minute)...")
               for cycle in range(6):
@@ -113,3 +140,11 @@ jobs:
           finally:
               driver.quit()
           PYEOF
+
+      - name: Uploader la capture d'écran en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-screenshot
+          path: /tmp/selenium_timeout.png
+          if-no-files-found: ignore
