@@ -3,7 +3,7 @@ name: CD — Keep-Alive Streamlit App
 on:
   schedule:
     # Visite quotidienne à 9h00 UTC — Streamlit Community Cloud endort les apps
-    # après 7 jours d'inactivité ; une vraie session navigateur par jour suffit.
+    # après 7 jours d'inactivité ; une interaction réelle par jour suffit.
     - cron: "0 9 * * *"
   workflow_dispatch:
 
@@ -18,38 +18,98 @@ jobs:
 
       - name: Interagir avec l'application Streamlit via Selenium headless
         run: |
-          npm install -g playwright
-          npx playwright install --with-deps chromium
+          python3 - << 'PYEOF'
+          import time
+          from selenium import webdriver
+          from selenium.webdriver.chrome.service import Service
+          from selenium.webdriver.chrome.options import Options
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          from webdriver_manager.chrome import ChromeDriverManager
 
-      - name: Visiter l'application Streamlit avec un vrai navigateur
-        run: |
-          cat > /tmp/keepalive.js << 'EOF'
-          const { chromium } = require('playwright');
+          URL     = "https://mcugraph.streamlit.app/"
+          TIMEOUT = 120  # secondes max pour chaque attente
 
-          (async () => {
-            const browser = await chromium.launch({ headless: true });
-            const page = await browser.newPage();
-            try {
-              console.log('Navigation vers https://mcugraph.streamlit.app/ ...');
-              await page.goto('https://mcugraph.streamlit.app/', {
-                waitUntil: 'networkidle',
-                timeout: 120000,
-              });
+          opts = Options()
+          opts.add_argument("--headless=new")
+          opts.add_argument("--no-sandbox")
+          opts.add_argument("--disable-dev-shm-usage")
+          opts.add_argument("--disable-gpu")
+          opts.add_argument("--window-size=1920,1080")
 
-              // Attendre que le spinner de chargement Streamlit disparaisse
-              await page.waitForSelector('[data-testid="stSpinner"]', {
-                state: 'hidden',
-                timeout: 120000,
-              }).catch(() => console.log('Pas de spinner détecté (app déjà active).'));
+          driver = webdriver.Chrome(
+              service=Service(ChromeDriverManager().install()),
+              options=opts,
+          )
+          wait = WebDriverWait(driver, TIMEOUT)
 
-              // Vérifier que le conteneur principal est bien rendu
-              const appVisible = await page.locator('[data-testid="stApp"]').isVisible();
-              if (!appVisible) throw new Error('stApp non visible — application non chargée.');
+          try:
+              # ── 1. Chargement de l'application ────────────────────────
+              print(f"Navigation vers {URL} ...")
+              driver.get(URL)
 
-              console.log('Succès : session WebSocket établie, application active.');
-            } finally {
-              await browser.close();
-            }
-          })();
-          EOF
-          node /tmp/keepalive.js
+              wait.until(EC.presence_of_element_located(
+                  (By.CSS_SELECTOR, '[data-testid="stApp"]')
+              ))
+              print("stApp visible.")
+
+              # ── 2. Attendre la fin du spinner initial ─────────────────
+              try:
+                  wait.until(EC.invisibility_of_element_located(
+                      (By.CSS_SELECTOR, '[data-testid="stSpinner"]')
+                  ))
+                  print("Chargement initial terminé.")
+              except Exception:
+                  print("Pas de spinner détecté — application déjà active.")
+
+              time.sleep(5)  # stabilisation
+
+              # ── 3. Ouvrir le selectbox "Choisissez un film" ───────────
+              # Streamlit rend chaque selectbox avec data-testid="stSelectbox"
+              # Le premier dans la sidebar correspond à la sélection du film.
+              selectbox = wait.until(EC.element_to_be_clickable(
+                  (By.CSS_SELECTOR, '[data-testid="stSelectbox"]')
+              ))
+              selectbox.click()
+              print("Selectbox ouvert.")
+              time.sleep(1)
+
+              # ── 4. Sélectionner le premier film de la liste ───────────
+              # Les options Streamlit sont des <li role="option">
+              # L'index 0 est "-- Tous les films --", on prend l'index 1.
+              options = wait.until(EC.presence_of_all_elements_located(
+                  (By.CSS_SELECTOR, 'li[role="option"]')
+              ))
+              print(f"{len(options)} option(s) disponible(s) dans le selectbox.")
+
+              target = options[1] if len(options) > 1 else options[0]
+              film_name = target.text
+              target.click()
+              print(f"Film sélectionné : «{film_name}»")
+
+              # ── 5. Attendre que le graphe se recharge ─────────────────
+              time.sleep(8)
+              try:
+                  wait.until(EC.invisibility_of_element_located(
+                      (By.CSS_SELECTOR, '[data-testid="stSpinner"]')
+                  ))
+                  print("Graphe rechargé.")
+              except Exception:
+                  print("Graphe prêt (pas de spinner secondaire).")
+
+              # ── 6. Maintenir la session active ≥ 1 minute ─────────────
+              # 6 cycles × 10 s = 60 s d'activité réelle (scroll alterné)
+              print("Simulation d'activité sur le graphe (≥ 1 minute)...")
+              for cycle in range(6):
+                  driver.execute_script("window.scrollBy(0, 400)")
+                  time.sleep(5)
+                  driver.execute_script("window.scrollBy(0, -400)")
+                  time.sleep(5)
+                  print(f"  Cycle {cycle + 1}/6 — session WebSocket active.")
+
+              print("Succès : application maintenue vivante pendant > 1 minute.")
+
+          finally:
+              driver.quit()
+          PYEOF
