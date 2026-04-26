@@ -83,24 +83,36 @@ jobs:
               ))
               print("Sidebar visible.")
               driver.save_screenshot("/tmp/selenium_step3_sidebar.png")
-              time.sleep(3)
 
-              # ── 4. Cliquer sur "🔄 Rafraîchir le graphe" ──────────────
-              # Streamlit rend les boutons sidebar en <button> dont le texte
-              # contient le label — on cherche par texte partiel.
-              refresh_btn = WebDriverWait(driver, 15).until(
-                  EC.element_to_be_clickable((
-                      By.XPATH,
-                      '//button[contains(., "Rafra")]'
-                  ))
-              )
+              # ── 4. Attendre que le script Streamlit ait fini de s'exécuter ─
+              # La sidebar apparaît dès que React la monte, mais les widgets
+              # (boutons, selectbox) ne sont rendus qu'à la fin du script Python.
+              # On attend que le bouton Rafraîchir soit présent dans le DOM
+              # avec un polling toutes les 2s — timeout 90s.
+              print("Attente du bouton Rafraîchir (fin d'exécution du script Streamlit)...")
+              refresh_btn = None
+              deadline_btn = time.time() + 90
+              while time.time() < deadline_btn:
+                  btns = driver.find_elements(
+                      By.XPATH, '//button[contains(., "Rafra")]'
+                  )
+                  if btns and btns[0].is_displayed():
+                      refresh_btn = btns[0]
+                      break
+                  elapsed = int(time.time() - (deadline_btn - 90))
+                  print(f"  [bouton Rafra] attente... {elapsed}s")
+                  time.sleep(2)
+
+              driver.save_screenshot("/tmp/selenium_step4_before_click.png")
+              if refresh_btn is None:
+                  raise TimeoutError("Bouton Rafraîchir introuvable après 90s")
               driver.execute_script("arguments[0].scrollIntoView(true);", refresh_btn)
               time.sleep(1)
               driver.execute_script("arguments[0].click();", refresh_btn)
               print("Bouton «Rafraîchir le graphe» cliqué.")
-              driver.save_screenshot("/tmp/selenium_step4_refresh.png")
+              driver.save_screenshot("/tmp/selenium_step5_refresh.png")
 
-              # ── 5. Attendre la fin du rerun Streamlit ──────────────────
+              # ── 6. Attendre la fin du rerun Streamlit ──────────────────
               # Après st.rerun(), un spinner apparaît puis disparaît
               time.sleep(5)
               deadline = time.time() + 60
@@ -112,9 +124,9 @@ jobs:
                       break
                   time.sleep(2)
               print("Graphe rechargé.")
-              driver.save_screenshot("/tmp/selenium_step5_graph.png")
+              driver.save_screenshot("/tmp/selenium_step6_graph.png")
 
-              # ── 6. Maintenir la session active ≥ 1 minute ─────────────
+              # ── 7. Maintenir la session active ≥ 1 minute ─────────────
               # 6 cycles × 10 s = 60 s d'activité réelle (scroll alterné)
               print("Simulation d'activité (≥ 1 minute)...")
               for cycle in range(6):
