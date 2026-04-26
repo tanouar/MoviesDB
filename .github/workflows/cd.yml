@@ -2,8 +2,6 @@ name: CD — Keep-Alive Streamlit App
 
 on:
   schedule:
-    # Visite toutes les 6h UTC — maintient la session WebSocket active
-    # et évite la mise en veille de Streamlit Community Cloud.
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
@@ -17,7 +15,7 @@ jobs:
       - name: Installer Selenium + WebDriver Manager
         run: pip install selenium webdriver-manager
 
-      - name: Interagir avec l'application Streamlit via Selenium headless
+      - name: Cliquer sur Rafraîchir le graphe
         run: |
           python3 - << 'PYEOF'
           import time
@@ -25,13 +23,9 @@ jobs:
           from selenium.webdriver.chrome.service import Service
           from selenium.webdriver.chrome.options import Options
           from selenium.webdriver.common.by import By
-          from selenium.webdriver.support.ui import WebDriverWait
-          from selenium.webdriver.support import expected_conditions as EC
           from webdriver_manager.chrome import ChromeDriverManager
 
-          URL          = "https://mcugraph.streamlit.app/"
-          TIMEOUT_WAKE = 20  # délai max pour détecter l'écran de veille
-          TIMEOUT_LOAD = 60  # la sidebar apparaît en ~2s selon l'utilisateur
+          URL = "https://mcugraph.streamlit.app/"
 
           opts = Options()
           opts.add_argument("--headless=new")
@@ -39,123 +33,44 @@ jobs:
           opts.add_argument("--disable-dev-shm-usage")
           opts.add_argument("--disable-gpu")
           opts.add_argument("--window-size=1920,1080")
-          opts.add_argument(
-              "--user-agent=Mozilla/5.0 (X11; Linux x86_64) "
-              "AppleWebKit/537.36 (KHTML, like Gecko) "
-              "Chrome/124.0.0.0 Safari/537.36"
-          )
 
           driver = webdriver.Chrome(
               service=Service(ChromeDriverManager().install()),
               options=opts,
           )
-          wait_load = WebDriverWait(driver, TIMEOUT_LOAD)
 
           try:
-              # ── 1. Chargement de la page ───────────────────────────────
-              print(f"Navigation vers {URL} ...")
               driver.get(URL)
-              time.sleep(5)
               print(f"Titre : {driver.title}")
-              driver.save_screenshot("/tmp/selenium_step1_loaded.png")
 
-              # ── 2. Gérer l'écran de veille Streamlit ──────────────────
-              try:
-                  wakeup_btn = WebDriverWait(driver, TIMEOUT_WAKE).until(
-                      EC.element_to_be_clickable((
-                          By.XPATH,
-                          '//button[contains(translate(., '
-                          '"ABCDEFGHIJKLMNOPQRSTUVWXYZ",'
-                          '"abcdefghijklmnopqrstuvwxyz"), '
-                          '"get this app back up")]'
-                      ))
-                  )
-                  print("Écran de veille détecté — clic sur le bouton de réveil...")
-                  wakeup_btn.click()
-                  time.sleep(10)
-                  driver.save_screenshot("/tmp/selenium_step2_wakeup.png")
-              except Exception:
-                  print("Pas d'écran de veille — application déjà active.")
-
-              # ── 3. Attendre que la sidebar soit chargée ────────────────
-              wait_load.until(EC.presence_of_element_located(
-                  (By.CSS_SELECTOR, '[data-testid="stSidebar"]')
-              ))
-              print("Sidebar visible.")
-              driver.save_screenshot("/tmp/selenium_step3_sidebar.png")
-
-              # ── 4. Attendre que le script Streamlit ait fini de s'exécuter ─
-              # La sidebar apparaît dès que React la monte, mais les widgets
-              # (boutons, selectbox) ne sont rendus qu'à la fin du script Python.
-              # On attend que le bouton Rafraîchir soit présent dans le DOM
-              # avec un polling toutes les 2s — timeout 90s.
-              print("Attente du bouton Rafraîchir (fin d'exécution du script Streamlit)...")
+              # Polling sur le bouton Rafraîchir — timeout 90s
+              deadline = time.time() + 90
               refresh_btn = None
-              deadline_btn = time.time() + 90
-              while time.time() < deadline_btn:
+              while time.time() < deadline:
                   btns = driver.find_elements(
                       By.XPATH, '//button[contains(., "Rafra")]'
                   )
                   if btns and btns[0].is_displayed():
                       refresh_btn = btns[0]
                       break
-                  elapsed = int(time.time() - (deadline_btn - 90))
-                  print(f"  [bouton Rafra] attente... {elapsed}s")
+                  print(f"  attente bouton... {int(time.time() - (deadline - 90))}s")
                   time.sleep(2)
 
-              driver.save_screenshot("/tmp/selenium_step4_before_click.png")
               if refresh_btn is None:
+                  driver.save_screenshot("/tmp/selenium_error.png")
                   raise TimeoutError("Bouton Rafraîchir introuvable après 90s")
-              driver.execute_script("arguments[0].scrollIntoView(true);", refresh_btn)
-              time.sleep(1)
+
               driver.execute_script("arguments[0].click();", refresh_btn)
-              print("Bouton «Rafraîchir le graphe» cliqué.")
-              driver.save_screenshot("/tmp/selenium_step5_refresh.png")
-
-              # ── 6. Attendre la fin du rerun Streamlit ──────────────────
-              # Après st.rerun(), un spinner apparaît puis disparaît
-              time.sleep(5)
-              deadline = time.time() + 60
-              while time.time() < deadline:
-                  spinners = driver.find_elements(
-                      By.CSS_SELECTOR, '[data-testid="stSpinner"]'
-                  )
-                  if not spinners or not spinners[0].is_displayed():
-                      break
-                  time.sleep(2)
-              print("Graphe rechargé.")
-              driver.save_screenshot("/tmp/selenium_step6_graph.png")
-
-              # ── 7. Maintenir la session active ≥ 1 minute ─────────────
-              # 6 cycles × 10 s = 60 s d'activité réelle (scroll alterné)
-              print("Simulation d'activité (≥ 1 minute)...")
-              for cycle in range(6):
-                  driver.execute_script("window.scrollBy(0, 400)")
-                  time.sleep(5)
-                  driver.execute_script("window.scrollBy(0, -400)")
-                  time.sleep(5)
-                  print(f"  Cycle {cycle + 1}/6 — session WebSocket active.")
-
-              print("Succès : application maintenue vivante > 1 minute.")
-
-          except Exception as exc:
-              driver.save_screenshot("/tmp/selenium_error.png")
-              present = [
-                  e.get_attribute("data-testid")
-                  for e in driver.find_elements(By.CSS_SELECTOR, "[data-testid]")
-              ]
-              print(f"ERREUR : {exc}")
-              print(f"data-testid présents au moment de l'erreur : {present[:20]}")
-              raise
+              print("Bouton «Rafraîchir le graphe» cliqué — succès.")
 
           finally:
               driver.quit()
           PYEOF
 
-      - name: Uploader les captures d'écran
-        if: always()
+      - name: Uploader la capture d'écran en cas d'échec
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: selenium-screenshots
-          path: /tmp/selenium_*.png
+          name: selenium-error
+          path: /tmp/selenium_error.png
           if-no-files-found: ignore
