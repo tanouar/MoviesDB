@@ -28,9 +28,9 @@ jobs:
           from selenium.webdriver.support import expected_conditions as EC
           from webdriver_manager.chrome import ChromeDriverManager
 
-          URL             = "https://mcugraph.streamlit.app/"
-          TIMEOUT_WAKE    = 20   # délai max pour détecter l'écran de veille
-          TIMEOUT_LOAD    = 180  # délai max pour le démarrage complet (cold start)
+          URL          = "https://mcugraph.streamlit.app/"
+          TIMEOUT_WAKE = 20   # délai max pour détecter l'écran de veille
+          TIMEOUT_LOAD = 180  # délai max pour le démarrage complet (cold start)
 
           opts = Options()
           opts.add_argument("--headless=new")
@@ -38,6 +38,12 @@ jobs:
           opts.add_argument("--disable-dev-shm-usage")
           opts.add_argument("--disable-gpu")
           opts.add_argument("--window-size=1920,1080")
+          # User-agent réaliste pour éviter les blocages anti-bot
+          opts.add_argument(
+              "--user-agent=Mozilla/5.0 (X11; Linux x86_64) "
+              "AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/124.0.0.0 Safari/537.36"
+          )
 
           driver = webdriver.Chrome(
               service=Service(ChromeDriverManager().install()),
@@ -48,7 +54,7 @@ jobs:
               # ── 1. Chargement de la page ───────────────────────────────
               print(f"Navigation vers {URL} ...")
               driver.get(URL)
-              time.sleep(3)
+              time.sleep(5)
               print(f"URL : {driver.current_url} | Titre : {driver.title}")
 
               # ── 2. Gérer l'écran de veille Streamlit ──────────────────
@@ -58,31 +64,36 @@ jobs:
                   wakeup_btn = WebDriverWait(driver, TIMEOUT_WAKE).until(
                       EC.element_to_be_clickable((
                           By.XPATH,
-                          '//button[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'
-                          '"abcdefghijklmnopqrstuvwxyz"), "get this app back up")]'
+                          '//button[contains(translate(., '
+                          '"ABCDEFGHIJKLMNOPQRSTUVWXYZ",'
+                          '"abcdefghijklmnopqrstuvwxyz"), '
+                          '"get this app back up")]'
                       ))
                   )
                   print("Écran de veille détecté — clic sur le bouton de réveil...")
                   wakeup_btn.click()
-                  time.sleep(5)
+                  time.sleep(10)
               except Exception:
                   print("Pas d'écran de veille — application déjà active.")
 
-              # ── 3. Attendre que l'application soit pleinement chargée ──
+              # ── 3. Attendre la sidebar (indicateur fiable de chargement) ─
+              # data-testid="stApp" est le shell React, présent immédiatement.
+              # data-testid="stSidebar" n'apparaît qu'après l'établissement
+              # de la WebSocket et le rendu complet des widgets Streamlit.
               wait = WebDriverWait(driver, TIMEOUT_LOAD)
               try:
                   wait.until(EC.presence_of_element_located(
-                      (By.CSS_SELECTOR, '[data-testid="stApp"]')
+                      (By.CSS_SELECTOR, '[data-testid="stSidebar"]')
                   ))
-                  print("stApp visible.")
+                  print("Sidebar visible — application pleinement chargée.")
               except Exception:
-                  # Capture d'écran pour aider au débogage
                   driver.save_screenshot("/tmp/selenium_timeout.png")
-                  print(f"ERREUR — stApp introuvable après {TIMEOUT_LOAD}s.")
-                  print(f"URL : {driver.current_url}")
-                  print(f"Titre : {driver.title}")
-                  print("Source (500 premiers caractères) :")
-                  print(driver.page_source[:500])
+                  all_testids = [
+                      e.get_attribute("data-testid")
+                      for e in driver.find_elements(By.CSS_SELECTOR, "[data-testid]")
+                  ]
+                  print(f"ERREUR — sidebar introuvable après {TIMEOUT_LOAD}s.")
+                  print(f"data-testid présents : {all_testids[:15]}")
                   raise
 
               # ── 4. Attendre la fin du spinner initial ──────────────────
@@ -94,25 +105,30 @@ jobs:
               except Exception:
                   print("Pas de spinner — application déjà prête.")
 
-              time.sleep(5)  # stabilisation
+              time.sleep(5)  # stabilisation WebSocket
 
               # ── 5. Ouvrir le selectbox "Choisissez un film" ────────────
               selectbox = wait.until(EC.element_to_be_clickable(
                   (By.CSS_SELECTOR, '[data-testid="stSelectbox"]')
               ))
+              # scrollIntoView pour s'assurer que l'élément est visible
+              driver.execute_script("arguments[0].scrollIntoView(true);", selectbox)
+              time.sleep(1)
               selectbox.click()
               print("Selectbox ouvert.")
-              time.sleep(1)
+              time.sleep(2)  # laisser le temps au portail de s'ouvrir
 
               # ── 6. Sélectionner le premier vrai film (index 1) ─────────
+              # L'index 0 est "-- Tous les films --"
               options = wait.until(EC.presence_of_all_elements_located(
                   (By.CSS_SELECTOR, 'li[role="option"]')
               ))
-              print(f"{len(options)} option(s) disponible(s) dans le selectbox.")
+              print(f"{len(options)} option(s) disponible(s).")
 
               target = options[1] if len(options) > 1 else options[0]
               film_name = target.text
-              target.click()
+              # Clic JS — plus fiable que le clic natif Selenium pour les portails
+              driver.execute_script("arguments[0].click();", target)
               print(f"Film sélectionné : «{film_name}»")
 
               # ── 7. Attendre que le graphe se recharge ──────────────────
@@ -138,13 +154,14 @@ jobs:
               print("Succès : application maintenue vivante pendant > 1 minute.")
 
           finally:
+              driver.save_screenshot("/tmp/selenium_final.png")
               driver.quit()
           PYEOF
 
-      - name: Uploader la capture d'écran en cas d'échec
-        if: failure()
+      - name: Uploader les captures d'écran
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: selenium-screenshot
-          path: /tmp/selenium_timeout.png
+          name: selenium-screenshots
+          path: /tmp/selenium_*.png
           if-no-files-found: ignore
