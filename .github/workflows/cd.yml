@@ -2,29 +2,28 @@ name: CD — Keep-Alive Streamlit App
 
 on:
   schedule:
+    # Visite quotidienne à 9h00 UTC — Streamlit Community Cloud endort les apps
+    # après 7 jours d'inactivité ; une vraie session navigateur par jour suffit.
     - cron: "0 9 * * *"
   workflow_dispatch:
 
 jobs:
   ping-streamlit:
-    name: Ping Streamlit App (Playwright)
+    name: Ping Streamlit App (Selenium)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Configurer Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Installer Selenium + WebDriver Manager
+        run: pip install selenium webdriver-manager
 
-      - name: Installer Playwright et Chromium
+      - name: Interagir avec l'application Streamlit via Selenium headless
         run: |
-          mkdir -p /tmp/pw && cd /tmp/pw
-          npm install playwright
+          npm install -g playwright
           npx playwright install --with-deps chromium
 
       - name: Visiter l'application Streamlit avec un vrai navigateur
         run: |
-          cat > /tmp/pw/keepalive.js << 'EOF'
+          cat > /tmp/keepalive.js << 'EOF'
           const { chromium } = require('playwright');
 
           (async () => {
@@ -43,12 +42,9 @@ jobs:
                 timeout: 120000,
               }).catch(() => console.log('Pas de spinner détecté (app déjà active).'));
 
-              // Attendre activement que stApp soit visible (au lieu de juste vérifier)
-              console.log('Attente du rendu de stApp...');
-              await page.waitForSelector('[data-testid="stApp"]', {
-                state: 'visible',
-                timeout: 120000,
-              });
+              // Vérifier que le conteneur principal est bien rendu
+              const appVisible = await page.locator('[data-testid="stApp"]').isVisible();
+              if (!appVisible) throw new Error('stApp non visible — application non chargée.');
 
               console.log('Succès : session WebSocket établie, application active.');
             } finally {
@@ -56,4 +52,4 @@ jobs:
             }
           })();
           EOF
-          node /tmp/pw/keepalive.js
+          node /tmp/keepalive.js
