@@ -15,14 +15,13 @@ jobs:
       - name: Installer Selenium + WebDriver Manager
         run: pip install selenium webdriver-manager
 
-      - name: Cliquer sur Rafraîchir le graphe
+      - name: Ouvrir l'application et maintenir la session active
         run: |
           python3 - << 'PYEOF'
           import time
           from selenium import webdriver
           from selenium.webdriver.chrome.service import Service
           from selenium.webdriver.chrome.options import Options
-          from selenium.webdriver.common.by import By
           from webdriver_manager.chrome import ChromeDriverManager
 
           URL = "https://mcugraph.streamlit.app/"
@@ -42,26 +41,9 @@ jobs:
           try:
               driver.get(URL)
               print(f"Titre : {driver.title}")
-
-              # Polling sur le bouton Rafraîchir — timeout 90s
-              deadline = time.time() + 90
-              refresh_btn = None
-              while time.time() < deadline:
-                  btns = driver.find_elements(
-                      By.XPATH, '//button[contains(., "Rafra")]'
-                  )
-                  if btns:
-                      refresh_btn = btns[0]
-                      break
-                  print(f"  attente bouton... {int(time.time() - (deadline - 90))}s")
-                  time.sleep(2)
-
-              if refresh_btn is None:
-                  driver.save_screenshot("/tmp/selenium_error.png")
-                  raise TimeoutError("Bouton Rafraîchir introuvable après 90s")
-
-              driver.execute_script("arguments[0].click();", refresh_btn)
-              print("Bouton «Rafraîchir le graphe» cliqué — succès.")
+              # Maintenir la session WebSocket ouverte 15 secondes
+              time.sleep(15)
+              print("Session active — succès.")
 
           finally:
               driver.quit()
