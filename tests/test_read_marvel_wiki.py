@@ -85,7 +85,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=film_tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch("pandas.DataFrame.to_csv") as mock_csv,
         ):
             main()
@@ -133,7 +135,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
@@ -161,7 +165,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
@@ -187,7 +193,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
@@ -210,17 +218,22 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
 
         df = written_frames[0]
         assert "release_year" in df.columns
-        assert int(df.loc[df["film"] == "Iron Man", "release_year"].iloc[0]) == 2008
+        assert int(df.loc[df["film"] == "Iron Man",
+                   "release_year"].iloc[0]) == 2008
 
     def test_citations_cleaned_in_film_names(self):
-        """Les citations dans les titres de films (ex: Iron Man[1]) sont nettoyées."""
+        """Les citations dans les titres de films (ex: Iron Man[1])
+        sont nettoyées.
+        """
         tables = [_make_film_table([("Iron Man[1]", "May 2, 2008")])]
         written_frames = []
 
@@ -234,7 +247,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
@@ -261,7 +276,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()
@@ -288,7 +305,9 @@ class TestMain:
         with (
             patch("read_marvel_wiki.requests.get", return_value=mock_resp),
             patch("read_marvel_wiki.pd.read_html", return_value=tables),
-            patch("read_marvel_wiki.pd.Timestamp.today", return_value=fixed_today),
+            patch(
+                "read_marvel_wiki.pd.Timestamp.today",
+                return_value=fixed_today),
             patch.object(pd.DataFrame, "to_csv", capturing_to_csv),
         ):
             main()

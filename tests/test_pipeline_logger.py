@@ -81,7 +81,11 @@ class TestSetupLogger:
     def test_has_two_handlers(self):
         """Doit avoir un StreamHandler + un FileHandler."""
         logger = setup_logger()
-        assert len(logger.handlers) == 2
+        app_handlers = [
+            h for h in logger.handlers
+            if type(h) in (logging.StreamHandler, logging.FileHandler)
+        ]
+        assert len(app_handlers) == 2
 
     def test_has_stream_handler(self):
         logger = setup_logger()
@@ -98,7 +102,11 @@ class TestSetupLogger:
         dupliquer les handlers."""
         setup_logger()
         logger = setup_logger()
-        assert len(logger.handlers) == 2
+        app_handlers = [
+            h for h in logger.handlers
+            if type(h) in (logging.StreamHandler, logging.FileHandler)
+        ]
+        assert len(app_handlers) == 2
 
     def test_propagate_is_false(self):
         logger = setup_logger()

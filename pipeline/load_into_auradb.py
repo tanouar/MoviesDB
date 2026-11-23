@@ -1,6 +1,6 @@
 """
 Script pour charger les données Marvel dans Neo4j AuraDB
-Utilise les fichiers CSV du dossier data/tests/
+Utilise les fichiers CSV du dossier data/csv/
 """
 import logging
 import os
@@ -18,7 +18,7 @@ logger = logging.getLogger("imdb_pipeline.load_auradb")
 
 # Configuration
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = PROJECT_ROOT / "data" / "tests"
+DATA_DIR = PROJECT_ROOT / "data" / "csv"
 
 # Charger les variables d'environnement depuis .env
 load_dotenv(PROJECT_ROOT / ".env")

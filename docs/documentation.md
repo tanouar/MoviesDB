@@ -131,7 +131,7 @@ Définir les variables suivantes pour faciliter la réutilisation des chemins et
 
 ```bash
 CONTAINER=moviesdb_mysql
-CSV_HOST_PATH=data/tests
+CSV_HOST_PATH=data/csv
 SQL_FILE_PATH=utils
 CONTAINER_FILE_PATH=/tmp/
 ```
