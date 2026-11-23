@@ -83,9 +83,9 @@ def check_pep8_compliance(files, config_file=None):
         # Cherche automatiquement .pycodestyle à la racine
         style = pycodestyle.StyleGuide(**style_config)
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🔍 VÉRIFICATION PEP8 EN COURS")
-    print("="*70)
+    print("=" * 70)
     print(f"📁 Nombre de fichiers à vérifier: {len(files)}\n")
 
     result = style.check_files(files)
@@ -104,22 +104,22 @@ def print_summary(total_errors, file_count):
     Returns:
         bool: True si conforme (0 erreur), False sinon
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 RÉSUMÉ DE LA VÉRIFICATION PEP8")
-    print("="*70)
+    print("=" * 70)
     print(f"📂 Fichiers vérifiés: {file_count}")
     print(f"🐛 Erreurs totales: {total_errors}")
 
     if total_errors == 0:
         print("\n✅ SUCCÈS: Tous les fichiers sont conformes à PEP8 !")
-        print("="*70)
+        print("=" * 70)
         return True
     else:
         print(f"\n❌ ÉCHEC: {total_errors} violation(s) PEP8 détectée(s)")
         print("\n💡 Conseil: Utilisez 'autopep8' pour corriger "
               "automatiquement:")
         print("   autopep8 --in-place --aggressive --aggressive <fichier>")
-        print("="*70)
+        print("=" * 70)
         return False
 
 
@@ -139,9 +139,9 @@ def main():
     root_dir = script_dir.parent
     os.chdir(root_dir)
 
-    print("="*70)
+    print("=" * 70)
     print("🎬 MoviesDB - Vérification PEP8")
-    print("="*70)
+    print("=" * 70)
     print(f"📂 Répertoire racine du projet: {root_dir.absolute()}\n")
 
     # Cherche les fichiers Python depuis la racine
@@ -154,7 +154,8 @@ def main():
 
     # Vérifie la conformité PEP8
     config_file = str(root_dir / ".pycodestyle")
-    total_errors, _ = check_pep8_compliance(python_files, config_file=config_file)
+    total_errors, _ = check_pep8_compliance(
+        python_files, config_file=config_file)
 
     # Affiche le résumé
     is_compliant = print_summary(total_errors, len(python_files))

@@ -1,6 +1,6 @@
 """
 Script de chargement des données Marvel dans Neo4j (instance locale)
-Charge les données depuis data/tests/ vers Neo4j Docker
+Charge les données depuis data/csv/ vers Neo4j Docker
 """
 import logging
 from pathlib import Path
@@ -15,7 +15,7 @@ logger = logging.getLogger("imdb_pipeline.load_neo4j")
 
 # Configuration
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = PROJECT_ROOT / "data" / "tests"
+DATA_DIR = PROJECT_ROOT / "data" / "csv"
 NEO4J_URI = 'bolt://0.0.0.0:7687'
 NEO4J_USERNAME = 'neo4j'
 NEO4J_PASSWORD = 'plbconsultant'

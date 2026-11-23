@@ -122,7 +122,7 @@ Le pipeline se déroule en trois grandes phases, chacune contrôlable via les ar
    - `marvel_directors_movies.sql` — réalisateurs
    - `marvel_producers_movies.sql` — producteurs
 
-Les résultats sont exportés en CSV dans le dossier `data/tests/`.
+Les résultats sont exportés en CSV dans le dossier `data/csv/`.
 
 ### Phase 3 — Mise en forme des CSV (`-csv`)
 
@@ -132,7 +132,7 @@ Les résultats sont exportés en CSV dans le dossier `data/tests/`.
 
 ## Fichiers de sortie
 
-Les fichiers CSV générés se trouvent dans `data/tests/` :
+Les fichiers CSV générés se trouvent dans `data/csv/` :
 
 | Fichier | Colonnes |
 |---------|----------|

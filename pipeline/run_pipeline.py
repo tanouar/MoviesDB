@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 COMPOSE_FILE = PROJECT_ROOT / "docker" / "docker-compose.yml"
 SQL_DIR = PROJECT_ROOT / "mysql"
-DATA_DIR = PROJECT_ROOT / "data" / "tests"
+DATA_DIR = PROJECT_ROOT / "data" / "csv"
 CONTAINER = "moviesdb_mysql"
 DB = "IMDb"
 DOCKER = "docker"
