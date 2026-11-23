@@ -98,7 +98,11 @@ class TestSetupLogger:
         dupliquer les handlers."""
         setup_logger()
         logger = setup_logger()
-        assert len(logger.handlers) == 2
+        app_handlers = [
+            h for h in logger.handlers
+            if isinstance(h, logging.StreamHandler)
+        ]
+        assert len(app_handlers) == 2
 
     def test_propagate_is_false(self):
         logger = setup_logger()
