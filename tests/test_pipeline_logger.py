@@ -83,7 +83,7 @@ class TestSetupLogger:
         logger = setup_logger()
         app_handlers = [
             h for h in logger.handlers
-            if isinstance(h, logging.StreamHandler)
+            if type(h) in (logging.StreamHandler, logging.FileHandler)
         ]
         assert len(app_handlers) == 2
 
@@ -104,7 +104,7 @@ class TestSetupLogger:
         logger = setup_logger()
         app_handlers = [
             h for h in logger.handlers
-            if isinstance(h, logging.StreamHandler)
+            if type(h) in (logging.StreamHandler, logging.FileHandler)
         ]
         assert len(app_handlers) == 2
 
